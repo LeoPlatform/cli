@@ -1,0 +1,54 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Mappings": {
+		"RegionMap": {}
+	},
+	"Metadata": {},
+	"Resources": {
+		"RestApi": {
+			"Type": "AWS::ApiGateway::RestApi",
+			"Properties": {
+				"Description": "",
+				"Name": "RestAPI"
+			}
+		},
+		"ApiRole": {
+			"Type": "AWS::IAM::Role",
+			"Properties": {
+				"AssumeRolePolicyDocument": {
+					"Version": "2012-10-17",
+					"Statement": [{
+						"Effect": "Allow",
+						"Principal": {
+							"Service": [
+								"lambda.amazonaws.com"
+							],
+							"AWS": {
+								"Fn::Sub": "arn:aws:iam::${AWS::AccountId}:root"
+							}
+						},
+						"Action": [
+							"sts:AssumeRole"
+						]
+					}]
+				},
+				"ManagedPolicyArns": [
+					"arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+				],
+				"Policies": [{
+					"PolicyName": "BasicPolicy",
+					"PolicyDocument": {
+						"Version": "2012-10-17",
+						"Statement": [{
+							"Effect": "Allow",
+							"Action": [
+								"lambda:AddPermission"
+							],
+							"Resource": "*"
+						}]
+					}
+				}]
+			}
+		}
+	}
+}

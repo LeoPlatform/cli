@@ -1,0 +1,33 @@
+{
+	"Type": "AWS::Lambda::Function",
+	"Properties": {
+		"Code": {
+			"S3Bucket": {
+				"Fn::FindInMap": [
+					"RegionMap",
+					{
+						"Ref": "AWS::Region"
+					},
+					"S3Bucket"
+				]
+			},
+			"S3Key": ""
+		},
+		"Description": "",
+		"Handler": "index.handler",
+		"Environment": {
+			"Variables": {
+				"Resources": "{}"
+			}
+		},
+		"MemorySize": 256,
+		"Runtime": "nodejs6.10",
+		"Timeout": 60,
+		"Role": {
+			"Fn::GetAtt": [
+				"ApiRole",
+				"Arn"
+			]
+		}
+	}
+}
