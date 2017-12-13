@@ -6,6 +6,8 @@ var colors = require('colors');
 var buildConfig = require("./lib/build-config").build;
 var cloudformation = require("./lib/cloud-formation.js");
 var createCloudFormation = cloudformation.createCloudFormation;
+var aws = require("aws-sdk");
+
 program
 	.version('0.0.1')
 	.option("-e, --env [env]", "Environment")
@@ -31,6 +33,15 @@ program
 			force = filter;
 			rootDir = configure._meta.microserviceDir;
 			configure = buildConfig(rootDir);
+		}
+
+		if (configure.aws.profile) {
+			console.log("Setting aws profile to", configure.aws.profile);
+			var credentials = new aws.SharedIniFileCredentials({
+				profile: configure.aws.profile
+			});
+			aws.config.credentials = credentials;
+			process.env.AWS_DEFAULT_PROFILE = configure.aws.profile;
 		}
 
 		let nameLower = configure.name.toLowerCase();
