@@ -21,7 +21,7 @@ program
 	.usage('<dir> [options]')
 	.action(function (dir) {
 		let env = program.env || "dev";
-		console.log(env)
+		// console.log(env)
 		let rootDir = path.resolve(process.cwd(), dir);
 
 		let configure = buildConfig(rootDir);

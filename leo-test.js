@@ -6,6 +6,8 @@ var program = require('commander');
 var colors = require('colors');
 var moment = require("moment");
 var aws = require("aws-sdk");
+let modulejs = require("module");
+let runInThisContext = require('vm').runInThisContext;
 
 program
 	.version('0.0.1')
@@ -117,8 +119,16 @@ program
 			.replace("____FILE____", path.normalize(path.resolve(rootDir, pkg.main || "index.js")).replace(/\\/g, "\\\\"))
 			.replace("____HANDLER____", config.handler || "handler");
 
-		let handler = eval(contents).handler;
+		// Compile the module to run
+		let r = path.normalize(path.resolve(rootDir, "__leo-cli-test-runner.js")).replace(/\\/g, "\\\\");
+		let m = new modulejs(r, module);
 
+		contents = stripBOM(contents).replace(/^\#\!.*/, ''); // remove shebang
+		runInThisContext(modulejs.wrap(contents), {
+			filename: r
+		}).apply(m.exports, [m.exports, require, m, r, path.dirname(r)]);
+
+		let handler = m.exports.handler;
 
 		var runner = {
 			event: event => event,
@@ -174,4 +184,14 @@ function createContext(pkg, config) {
 			}
 		}
 	};
+}
+
+function stripBOM(content) {
+	// Remove byte order marker. This catches EF BB BF (the UTF-8 BOM)
+	// because the buffer-to-string conversion in `fs.readFileSync()`
+	// translates it to FEFF, the UTF-16 BOM.
+	if (content.charCodeAt(0) === 0xFEFF) {
+		content = content.slice(1);
+	}
+	return content;
 }
