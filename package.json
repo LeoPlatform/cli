@@ -1,13 +1,13 @@
 {
   "name": "leo-cli",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "",
   "main": "index.js",
   "directories": {
     "test": "test"
   },
   "bin": {
-    "leo-cli": "./leo.js"
+    "leo-cli": "./leo-cli.js"
   },
   "dependencies": {
     "archiver": "^1.0.0",
@@ -118,5 +118,5 @@
     "test": "mocha --require ./test/bootstrap.js --recursive -w"
   },
   "author": "",
-  "license": "ISC"
+  "license": "MIT"
 }

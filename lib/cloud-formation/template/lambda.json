@@ -24,10 +24,7 @@
 		"Runtime": "nodejs6.10",
 		"Timeout": 60,
 		"Role": {
-			"Fn::GetAtt": [
-				"ApiRole",
-				"Arn"
-			]
+			"Fn::Sub": "${ApiRole.Arn}"
 		}
 	}
 }
