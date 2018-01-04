@@ -28,7 +28,7 @@ program
 
 		let filter = program.filter;
 		let force = program.force;
-		if (configure.type !== "microservice") {
+		if (configure.type !== "microservice" && configure._meta.microserviceDir) {
 			filter = rootDir.replace(/^.*?(bots|api)[\\/]/, "")
 			force = filter;
 			rootDir = configure._meta.microserviceDir;
@@ -43,9 +43,6 @@ program
 			aws.config.credentials = credentials;
 			process.env.AWS_DEFAULT_PROFILE = configure.aws.profile;
 		}
-
-		let nameLower = configure.name.toLowerCase();
-		let folder = nameLower;
 
 		program.region = program.region || (configure.regions || [])[0] || "us-west-2";
 
