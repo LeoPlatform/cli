@@ -17,11 +17,11 @@ program
 		var parentType = findFirstPackageValue(process.cwd(), [], "type");
 
 		let roots = {
-			bot: new RegExp("bots[/\\\\]"),
-			load: new RegExp("bots[/\\\\]"),
-			enrich: new RegExp("bots[/\\\\]"),
-			offload: new RegExp("bots[/\\\\]"),
-			resource: new RegExp("apis[/\\\\]"),
+			bot: path.normalize("bots/"),
+			load: path.normalize("bots/"),
+			enrich: path.normalize("bots/"),
+			offload: path.normalize("bots/"),
+			resource: path.normalize("apis/"),
 		};
 
 		if (['system', 'microservice', 'resource', 'load', 'enrich', 'offload'].indexOf(type) === -1) {
@@ -29,7 +29,7 @@ program
 		}
 		let prefix = "./";
 
-		if (roots[type] && !path.resolve(dir).match(roots[type])) {
+		if (roots[type] && path.resolve(dir).indexOf(roots[type]) === -1) {
 			prefix = roots[type] || "";
 		}
 

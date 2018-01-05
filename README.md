@@ -60,17 +60,19 @@ leo-cli create cron MyCronBot
 
 Testing Bots & Apis
 -------------------
-Inside the bot or resource directory
+Inside a bot or resource directory
 
 ```
+cd /MySystem/MyService/bots/MyBot
 leo-cli test .
 ```
 
 Runing Bots
 -----------
-Inside the bot or resource directory
+Inside a bot or resource directory
 
 ```
+cd /MySystem/MyService/bots/MyBot
 leo-cli run .
 ```
 
@@ -114,7 +116,7 @@ leo-cli publish .
 Publish a single bot in a Microservice
 
 ```
-cd /MySystem/MyService/MyBot
+cd /MySystem/MyService/bots/MyBot
 leo-cli publish . 
 ```  
 
@@ -122,7 +124,7 @@ leo-cli publish .
 Publish a single bot or resource in a Microservice
 
 ```
-cd /MySystem/MyService/MyBot
+cd /MySystem/MyService/bots/MyBot
 leo-cli publish . 
 ```  
 
