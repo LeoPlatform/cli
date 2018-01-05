@@ -119,6 +119,19 @@ program
 			.replace("____FILE____", path.normalize(path.resolve(rootDir, pkg.main || "index.js")).replace(/\\/g, "\\\\"))
 			.replace("____HANDLER____", config.handler || "handler");
 
+
+		contents = `"use strict";
+			var configure = require("leo-sdk").configuration;
+			var AWS = require("aws-sdk");
+			if (configure.aws.profile && process.env.AWS_DEFAULT_PROFILE != configure.aws.profile) {
+				console.log("Setting aws profile to", configure.aws.profile);
+				var credentials = new AWS.SharedIniFileCredentials({
+					profile: configure.aws.profile
+				});
+				AWS.config.credentials = credentials;
+				process.env.AWS_DEFAULT_PROFILE = configure.aws.profile;
+			}\n` + contents.replace(`"use strict";`, "");
+
 		// Compile the module to run
 		let r = path.normalize(path.resolve(rootDir, "__leo-cli-test-runner.js")).replace(/\\/g, "\\\\");
 		let m = new modulejs(r, module);
@@ -150,7 +163,7 @@ program
 
 		handler(runner.event(event), createContext(pkg, config), (err, data) => {
 			runner.callback(err, data, (err, data) => {
-				console.log("\n\n\n--------------------------Results--------------------------\n")
+				data && console.log("\n\n\n--------------------------Results--------------------------\n")
 				if (err) {
 					console.log("Error:", err)
 				} else {
