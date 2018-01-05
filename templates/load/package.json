@@ -19,11 +19,9 @@
 			"cron": {
 				"settings": {
 					"destination": "____OUT_QUEUE_NAME____"
-				}
+				},
+				"time": "0 */1 * * * * "
 			}
 		}
-	},
-	"dependencies": {
-		"leo-sdk": "^1.0.41"
 	}
 }
