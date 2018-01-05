@@ -85,12 +85,12 @@ leo-cli publish .
 ```
 
 options
-* --region awsRegion			Sets the AWS Region. default: us-west-2
-* --filter idGlobExp			Filters the lambdas deployed by the given glob expression. default: *
-* --force botId|all				Forces a bot to build event if version are the same (Must be included in --filter expression). default: false
-* --run awsStackName			Runs the generated cloudformation.json against the AWS Stack 'awsStackName'.  If the stack doesn't exist, it will be crated
-* --build						Builds the cloudformation and lambdas but doesn't publish them to s3
-* --public						Makes the s3 publish folder public
+* **--region awsRegion**			Sets the AWS Region. default: us-west-2
+* **--filter idGlobExp**			Filters the lambdas deployed by the given glob expression. default: *
+* **--force botId|all**				Forces a bot to build event if version are the same (Must be included in --filter expression). default: false
+* **--run awsStackName**			Runs the generated cloudformation.json against the AWS Stack 'awsStackName'.  If the stack doesn't exist, it will be crated
+* **--build**						Builds the cloudformation and lambdas but doesn't publish them to s3
+* **--public**						Makes the s3 publish folder public
 
 Version of the build using the microservice/bot/api package.json file.  If a bot/api is forced to be built and has the same version number the current timestamp will be appended to he version
 
