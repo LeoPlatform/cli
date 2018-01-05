@@ -138,3 +138,15 @@ leo-cli publish . --filter MyBot
 
 Deploying a Microservices to AWS
 -------------------------------------
+
+The deploy command can only be run after a microservice has been published.  You must be inside a microservice directory to deploy.
+
+The second parameter is the name of the AWS Stack for the microservice.
+
+```
+cd /MySystem/MyService
+leo-cli deploy . TestMyService
+leo-cli deploy . StageMyService
+leo-cli deploy . ProdMyService
+```
+

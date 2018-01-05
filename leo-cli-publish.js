@@ -14,6 +14,7 @@ program
 	.option("--build", "Only build")
 	.option("--public", "Make published version public")
 	.option("--run [stack]", "Run the published cloudformation")
+	.option("--deploy [stack]", "Deploys the published cloudformation")
 	.option("--patch [stack]", "Stack to get original cloudformation")
 	.option("--region [region]", "Region to run cloudformation")
 	.option("--force [bots]", "Force bots to publish")
@@ -23,6 +24,7 @@ program
 		let env = program.env || "dev";
 		// console.log(env)
 		let rootDir = path.resolve(process.cwd(), dir);
+		program.run = program.run || program.deploy;
 
 		let configure = buildConfig(rootDir);
 
