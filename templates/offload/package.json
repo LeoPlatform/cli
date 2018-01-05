@@ -1,0 +1,29 @@
+{
+	"name": "____DIRNAME____",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"directories": {
+		"test": "test"
+	},
+	"scripts": {
+		"test": "leo-cli test . "
+	},
+	"config": {
+		"leo": {
+			"type": "cron",
+			"memory": 128,
+			"timeout": 10,
+			"role": "ApiRole",
+			"env": {},
+			"cron": {
+				"settings": {
+					"source": "____IN_QUEUE_NAME____"
+				}
+			}
+		}
+	},
+	"dependencies": {
+		"leo-sdk": "^1.0.41"
+	}
+}

@@ -1,0 +1,15 @@
+{
+	"name": "____DIRNAME____",
+	"version": "1.0.0",
+	"description": "",
+	"main": "app.js",
+	"scripts": {},
+	"config": {
+		"leo": {
+			"type": "microservice",
+			"stacks": [
+				"leosdk"
+			]
+		}
+	}
+}
