@@ -17,8 +17,9 @@ program
 	.option("--deploy [stack]", "Deploys the published cloudformation")
 	.option("--patch [stack]", "Stack to get original cloudformation")
 	.option("--region [region]", "Region to run cloudformation")
-	.option("--force [bots]", "Force bots to publish")
-	.option("--filter [bots]", "Filter bots to publish")
+	.option("--force [force]", "Force bots to publish")
+	.option("--filter [filter]", "Filter bots to publish")
+	.option("--awsprofile [awsprofile]", "AWS Profile to use")
 	.usage('<dir> [options]')
 	.action(function (dir) {
 		let env = program.env || "dev";
@@ -37,14 +38,15 @@ program
 			configure = buildConfig(rootDir);
 		}
 
-		if (configure.aws.profile) {
-			console.log("Setting aws profile to", configure.aws.profile);
-			var credentials = new aws.SharedIniFileCredentials({
-				profile: configure.aws.profile
-			});
-			aws.config.credentials = credentials;
-			process.env.AWS_DEFAULT_PROFILE = configure.aws.profile;
+		if (program.awsprofile || configure.aws.profile) {
+			process.env.LEO_AWS_PROFILE = program.awsprofile || configure.aws.profile;
 		}
+		// if (configure.aws.profile) {
+		// 	console.log("Setting aws profile to", process.env.LEO_AWS_PROFILE);
+		// 	var credentials = require("./lib/leo-aws")(process.env.LEO_AWS_PROFILE);
+		// 	aws.config.credentials = credentials;
+		// 	process.env.AWS_DEFAULT_PROFILE = process.env.LEO_AWS_PROFILE;
+		// }
 
 		program.region = program.region || (configure.regions || [])[0] || "us-west-2";
 

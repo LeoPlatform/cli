@@ -5,7 +5,6 @@ var fs = require('fs');
 var program = require('commander');
 var colors = require('colors');
 var moment = require("moment");
-var aws = require("aws-sdk");
 let modulejs = require("module");
 let runInThisContext = require('vm').runInThisContext;
 
@@ -34,12 +33,12 @@ program
 			event = Object.assign(event, require(eventjson));
 		}
 
-		var cloudformation = new aws.CloudFormation({
-			region: config.aws.region
-		});
-		var lambda = new aws.Lambda({
-			region: config.aws.region
-		});
+		// var cloudformation = new aws.CloudFormation({
+		// 	region: config.aws.region
+		// });
+		// var lambda = new aws.Lambda({
+		// 	region: config.aws.region
+		// });
 
 
 		// cloudformation.describeStackResources({
@@ -118,19 +117,6 @@ program
 		var contents = fs.readFileSync(wrapperFile, 'utf-8')
 			.replace("____FILE____", path.normalize(path.resolve(rootDir, pkg.main || "index.js")).replace(/\\/g, "\\\\"))
 			.replace("____HANDLER____", config.handler || "handler");
-
-
-		contents = `"use strict";
-			var configure = require("leo-sdk").configuration;
-			var AWS = require("aws-sdk");
-			if (configure.aws.profile && process.env.AWS_DEFAULT_PROFILE != configure.aws.profile) {
-				console.log("Setting aws profile to", configure.aws.profile);
-				var credentials = new AWS.SharedIniFileCredentials({
-					profile: configure.aws.profile
-				});
-				AWS.config.credentials = credentials;
-				process.env.AWS_DEFAULT_PROFILE = configure.aws.profile;
-			}\n` + contents.replace(`"use strict";`, "");
 
 		// Compile the module to run
 		let r = path.normalize(path.resolve(rootDir, "__leo-cli-test-runner.js")).replace(/\\/g, "\\\\");

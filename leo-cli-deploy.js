@@ -12,6 +12,7 @@ program
 	.version('0.0.1')
 	.option("--region [region]", "Region to run cloudformation")
 	.option("--url [url]", "s3 url to cloudformation.json")
+	.option("--awsprofile [awsprofile]", "AWS Profile to use")
 	.usage('<dir> <stack> [options]')
 	.action(function (dir, stack) {
 		let rootDir = path.resolve(process.cwd(), dir);
@@ -21,6 +22,9 @@ program
 			configure = buildConfig(rootDir);
 		}
 
+		if (program.awsprofile || configure.aws.profile) {
+			process.env.LEO_AWS_PROFILE = program.awsprofile || configure.aws.profile;
+		}
 		program.region = program.region || (configure.regions || [])[0] || "us-west-2";
 
 		if (stack && typeof stack === "string") {
