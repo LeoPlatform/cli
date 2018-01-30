@@ -67,18 +67,43 @@ program
 		// return;
 
 		// Load process info
-		let processjson = path.resolve(rootDir, "test/process.json");
-		if (fs.existsSync(processjson)) {
-			let p = require(processjson);
-			p.env && Object.keys(p.env).map(k => {
-				let v = p.env[k];
-				if (typeof v !== "string") {
-					v = JSON.stringify(v);
-				}
-				process.env[k] = v;
-			})
-		}
-
+    let processjson = path.resolve(rootDir, "test/process.json");
+    let processjs = path.resolve(rootDir, "test/process.js");
+    let p;
+    if (fs.existsSync(processjson)) {
+      p = require(processjson);
+    } else if (fs.existsSync(processjs)) {
+      p = require(processjs);
+    }
+    // Cloud Formation Cache Vars Path in the System Directory
+    let cfCacheVarsPath = `${config._meta.systemDir}/cloudformation-cache-${env}.json`;
+    let cfCacheVars = {};
+    if(fs.existsSync(cfCacheVarsPath)){
+      cfCacheVars = require(cfCacheVarsPath);
+    }
+    // Cloud Formation Cache Vars Path in the Global .leo Directory
+    let globalCFCacheVarsPath = path.resolve(require("os").homedir(), `.leo/cloudformation-cache-${env}.json`);
+    if(fs.existsSync(globalCFCacheVarsPath)){
+      cfCacheVars = Object.assign({}, require(globalCFCacheVarsPath), cfCacheVars);
+    }
+    let envVars = Object.assign({}, config.env, p && p.env);
+    Object.keys(envVars).map(k => {
+      let v = envVars[k];
+      if (typeof v !== "string") {
+        v = JSON.stringify(v);
+      }
+      let p = v.match(/\${(.*?)}/g);
+      if(p){
+        v = v.replace(/\${(.*?)}/g, function(a, b){
+          if(!(b in cfCacheVars)){
+            console.log("Add " + b + " to the " + cfCacheVarsPath + " file");
+            process.exit();
+          }
+          return cfCacheVars[b];
+        });
+      }
+      process.env[k] = v;
+    });
 
 		if (config.aliases) {
 			let defaultAlias = Object.keys(config.aliases).map(k => config.aliases[k]).filter(a => a.default) || {};
