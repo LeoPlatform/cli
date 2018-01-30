@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+require("babel-register");
 var path = require('path');
 var fs = require('fs');
 var program = require('commander');
@@ -29,8 +30,11 @@ program
 
 		let event = pkg.config && pkg.config.leo && pkg.config.leo.cron && pkg.config.leo.cron.settings || {};
 		let eventjson = path.resolve(rootDir, "test/event.json");
+		let eventjs = path.resolve(rootDir, "test/event.js");
 		if (fs.existsSync(eventjson)) {
 			event = Object.assign(event, require(eventjson));
+		} else if (fs.existsSync(eventjs)) {
+			event = Object.assign(event, require(eventjs));
 		}
 
 		// var cloudformation = new aws.CloudFormation({
@@ -67,47 +71,46 @@ program
 		// return;
 
 		// Load process info
-    let processjson = path.resolve(rootDir, "test/process.json");
-    let processjs = path.resolve(rootDir, "test/process.js");
-    let p;
-    if (fs.existsSync(processjson)) {
-      p = require(processjson);
-    } else if (fs.existsSync(processjs)) {
-      p = require(processjs);
-    }
-    // Cloud Formation Cache Vars Path in the System Directory
-    let cfCacheVarsPath = `${config._meta.systemDir}/cloudformation-cache-${env}.json`;
-    let cfCacheVars = {};
-    if(fs.existsSync(cfCacheVarsPath)){
-      cfCacheVars = require(cfCacheVarsPath);
-    }
-    // Cloud Formation Cache Vars Path in the Global .leo Directory
-    let globalCFCacheVarsPath = path.resolve(require("os").homedir(), `.leo/cloudformation-cache-${env}.json`);
-    if(fs.existsSync(globalCFCacheVarsPath)){
-      cfCacheVars = Object.assign({}, require(globalCFCacheVarsPath), cfCacheVars);
-    }
-    let envVars = Object.assign({}, config.env, p && p.env);
-    Object.keys(envVars).map(k => {
-      let v = envVars[k];
-      if (typeof v !== "string") {
-        v = JSON.stringify(v);
-      }
-      let p = v.match(/\${(.*?)}/g);
-      if(p){
-        v = v.replace(/\${(.*?)}/g, function(a, b){
-          if(!(b in cfCacheVars)){
-            console.log("Add " + b + " to the " + cfCacheVarsPath + " file");
-            process.exit();
-          }
-          return cfCacheVars[b];
-        });
-      }
-      process.env[k] = v;
-    });
+		let processjson = path.resolve(rootDir, "test/process.json");
+		let processjs = path.resolve(rootDir, "test/process.js");
+		let p;
+		if (fs.existsSync(processjson)) {
+			p = require(processjson);
+		} else if (fs.existsSync(processjs)) {
+			p = require(processjs);
+		}
+		// Cloud Formation Cache Vars Path in the System Directory
+		let cfCacheVarsPath = `${config._meta.systemDir}/cloudformation-cache-${env}.json`;
+		let cfCacheVars = {};
+		if (fs.existsSync(cfCacheVarsPath)) {
+			cfCacheVars = require(cfCacheVarsPath);
+		}
+		// Cloud Formation Cache Vars Path in the Global .leo Directory
+		let globalCFCacheVarsPath = path.resolve(require("os").homedir(), `.leo/cloudformation-cache-${env}.json`);
+		if (fs.existsSync(globalCFCacheVarsPath)) {
+			cfCacheVars = Object.assign({}, require(globalCFCacheVarsPath), cfCacheVars);
+		}
+		let envVars = Object.assign({}, config.env, p && p.env);
+		Object.keys(envVars).map(k => {
+			let v = envVars[k];
+			if (typeof v !== "string") {
+				v = JSON.stringify(v);
+			}
+			let p = v.match(/\${(.*?)}/g);
+			if (p) {
+				v = v.replace(/\${(.*?)}/g, function (a, b) {
+					if (!(b in cfCacheVars)) {
+						console.log("Add " + b + " to the " + cfCacheVarsPath + " file");
+						process.exit();
+					}
+					return cfCacheVars[b];
+				});
+			}
+			process.env[k] = v;
+		});
 
 		if (config.aliases) {
 			let defaultAlias = Object.keys(config.aliases).map(k => config.aliases[k]).filter(a => a.default) || {};
-
 
 
 
@@ -172,9 +175,11 @@ program
 			// TODO: build payload
 		}
 
-		handler(runner.event(event), createContext(pkg, config), (err, data) => {
+		let theEvent = runner.event(event);
+		handler(theEvent, createContext(pkg, config), (err, data) => {
 			runner.callback(err, data, (err, data) => {
 				data && console.log("\n\n\n--------------------------Results--------------------------\n")
+				let results = data;
 				if (err) {
 					console.log("Error:", err)
 				} else {
@@ -185,7 +190,10 @@ program
 						console.log(data);
 					}
 				}
-			})
+				if (fs.existsSync(path.resolve(rootDir, "test/postprocess.js"))) {
+					require(path.resolve(rootDir, "test/postprocess.js"))(theEvent, err, results)
+				}
+			});
 		});
 	})
 	.parse(process.argv);
