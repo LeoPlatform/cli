@@ -1,4 +1,30 @@
 #!/usr/bin/env node
+var fs = require('fs');
+var path = require('path');
+
+require("./lib/leo-bot-run.js")(process.argv, (err, module) => {
+	module.handler(module.event, createContext({}, module.config), (err, data) => {
+		module.runner.callback(err, data, (err, data) => {
+			data && console.log("\n\n\n--------------------------Results--------------------------\n")
+			let results = data;
+			if (err) {
+				console.log("Error:", err)
+			} else {
+				if (typeof data === "object") {
+					data = JSON.stringify(data, null, 2);
+				}
+				if (data !== undefined) {
+					console.log(data);
+				}
+			}
+			if (fs.existsSync(path.resolve(module.rootDir, "test/postprocess.js"))) {
+				require(path.resolve(module.rootDir, "test/postprocess.js"))(module.event, err, results)
+			}
+		});
+	});
+
+});
+return;
 
 require("babel-register");
 var path = require('path');
@@ -204,9 +230,9 @@ if (!process.argv.slice(2).length) {
 
 function createContext(pkg, config) {
 	var start = new Date();
-	var maxTime = (config.timeout || 300) * 1000;
+	var maxTime = (config.timeout || 5256000) * 1000;
 	return {
-		awsRequestId: "requestid-local" + moment.now().toString(),
+		awsRequestId: "requestid-local" + Date.now().toString(),
 		getRemainingTimeInMillis: function () {
 			var timeSpent = new Date() - start;
 			if (timeSpent < maxTime) {
