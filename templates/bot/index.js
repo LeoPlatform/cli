@@ -1,7 +1,12 @@
 "use strict";
 
-var leo = require("leo-sdk");
-exports.handler = function (event, context, callback) {
+const leo = require("leo-sdk");
+const ls = leo.streams;
+
+
+exports.handler = function(event, context, callback) {
+	const ID = event.botId;
+
 	// Do work
 	callback();
-}
+};
