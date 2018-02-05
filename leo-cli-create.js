@@ -9,12 +9,13 @@ program
 	.version('0.0.2')
 	.arguments('<type> <dir>')
 	.usage('<type> <dir> [options]')
-	.action(function (type, dir) {
+	.action(function(type, dir) {
 		var pkgname = null;
 		let declaredType = type = type.toLowerCase();
 
 
 		var parentType = findFirstPackageValue(process.cwd(), [], "type");
+		var parentName = findFirstPackageValue(process.cwd(), [], "name");
 
 		let roots = {
 			bot: path.normalize("bots/"),
@@ -45,11 +46,11 @@ program
 				}
 
 				copyDirectorySync(__dirname + "/templates/microservice", prefix + dir, {
-					'____DIRNAME____': dir
+					'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_')
 				});
 			} else if (type == "system") {
 				copyDirectorySync(__dirname + "/templates/system", prefix + dir, {
-					'____DIRNAME____': dir
+					'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_')
 				});
 			} else {
 				if (parentType != "microservice" && parentType != "system") {
@@ -58,8 +59,8 @@ program
 				}
 
 				copyDirectorySync(__dirname + `/templates/${type}`, prefix + dir, {
-					'____DIRNAME____': dir,
-					'____BOTNAME____': dir,
+					'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_'),
+					'____BOTNAME____': parentName + "-" + dir.replace(/\s+/g, '_'),
 					'____BOTTYPE____': declaredType
 				});
 			}
@@ -81,7 +82,7 @@ function copyDirectorySync(src, dest, replacements) {
 	var stats = fs.statSync(src);
 	if (stats.isDirectory()) {
 		fs.mkdirSync(dest);
-		fs.readdirSync(src).forEach(function (entry) {
+		fs.readdirSync(src).forEach(function(entry) {
 			copyDirectorySync(path.join(src, entry), path.join(dest, entry), replacements);
 		});
 	} else {
@@ -104,7 +105,7 @@ function findParentFiles(dir, filename) {
 	} while (dir != lastDir);
 
 	var matches = [];
-	paths.forEach(function (dir) {
+	paths.forEach(function(dir) {
 		var file = path.resolve(dir, filename);
 		if (fs.existsSync(file)) {
 
@@ -127,7 +128,7 @@ function findFirstPackageValue(dir, types, field, reverse) {
 		var file = paths[i];
 		var pkg = require(file);
 		if (pkg && pkg.config && pkg.config.leo && (types.length === 0 || types.indexOf(pkg.config.leo.type) !== -1)) {
-			return pkg.config.leo[field];
+			return pkg.config.leo[field] || pkg[field];
 		}
 	}
 	return null;

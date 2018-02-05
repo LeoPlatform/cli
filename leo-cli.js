@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
+require("babel-register");
+
 var program = require('commander');
 var configure = require("./package.json");
-
 program
 	.version(configure.version)
 	.command('publish [directory]', "Publish your project to S3")
