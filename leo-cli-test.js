@@ -44,17 +44,6 @@ program
 				f();
 			}
 		}
-		if (process.platform === "win32") {
-			var rl = require("readline").createInterface({
-				input: process.stdin,
-				output: process.stdout
-			});
-
-			rl.on("SIGINT", function() {
-				process.emit("SIGINT");
-			});
-		}
-		console.log("setting up signint");
 		process.on('SIGINT', () => {
 			if (child) {
 				console.log("closing child process.  Ctrl-c again to cancel test");
