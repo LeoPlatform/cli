@@ -13,6 +13,7 @@ program
 	.option("--region [region]", "Region to run cloudformation")
 	.option("--url [url]", "s3 url to cloudformation.json")
 	.option("--awsprofile [awsprofile]", "AWS Profile to use")
+	.option("--tag [tag]", "Tag for publish directory.  eg. prod")
 	.usage('<dir> <stack> [options]')
 	.action(function (dir, stack) {
 		let rootDir = path.resolve(process.cwd(), dir);
@@ -27,6 +28,7 @@ program
 		}
 		program.region = program.region || (configure.regions || [])[0] || "us-west-2";
 
+		program.tag = (program.tag ? (program.tag.match(/^[\/\\]/) ? program.tag : `/${program.tag}`) : "").replace(/\\/g, "/");
 		if (stack && typeof stack === "string") {
 			cloudformation.getBuckets([program.region], {}, (err, buckets) => {
 				const cloudFormationFile = path.resolve(path.resolve(dir, "cloudformation.json"));
@@ -40,7 +42,7 @@ program
 				let s3region = program.region == "us-east-1" ? "" : "-" + program.region;
 				let bucket = {
 					region: program.region,
-					url: program.url || `https://s3${s3region}.amazonaws.com/${buckets[0].bucket}/${microservice.name}/${version}/`,
+					url: program.url || `https://s3${s3region}.amazonaws.com/${buckets[0].bucket}/${microservice.name}${program.tag}/${version}/`,
 					cloudFormation: JSON.parse(fs.readFileSync(cloudFormationFile))
 				};
 				let url = bucket.url + "cloudformation.json"
@@ -54,7 +56,8 @@ program
 					Parameters: Object.keys(bucket.cloudFormation.Parameters || {}).map(key => {
 						return {
 							ParameterKey: key,
-							UsePreviousValue: true
+							UsePreviousValue: true,
+							NoEcho: bucket.cloudFormation.Parameters[key].NoEcho
 						}
 					})
 				}).then(data => {
