@@ -73,7 +73,7 @@
         "mocha": "^2.4.5",
         "mock-aws": "^1.2.3",
         "mock-require": "^1.2.1",
-        "moment": "^2.12.0",
+        "moment": "^2.19.3",
         "moment-round": "^1.0.1",
         "moment-timezone": "^0.5.11",
         "mongodb": "^2.2.26",
