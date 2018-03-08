@@ -18,10 +18,12 @@ program
 	.usage('<stack> <region> <dir> [options]')
 	.action(function(stack, region, dir, options) {
 		if (typeof dir === "object") {
-			dir = ".";
 			options = dir;
+			dir = ".";
 		}
-
+		if (options.global) {
+			dir = null;
+		}
 		generateProfile(stack, {
 			region: region
 		}, dir, (err) => {
