@@ -20,8 +20,9 @@ program
 	.option("--force [force]", "Force bots to publish")
 	.option("--filter [filter]", "Filter bots to publish")
 	.option("--awsprofile [awsprofile]", "AWS Profile to use")
+	.option("--tag [tag]", "Tag for publish directory.  eg. prod")
 	.usage('<dir> [options]')
-	.action(function (dir) {
+	.action(function(dir) {
 		let env = program.env || "dev";
 		// console.log(env)
 		let rootDir = path.resolve(process.cwd(), dir);
@@ -32,7 +33,7 @@ program
 		let filter = program.filter;
 		let force = program.force;
 		if (configure.type !== "microservice" && configure._meta.microserviceDir) {
-			filter = rootDir.replace(/^.*?(bots|api)[\\/]/, "")
+			filter = rootDir.replace(/^.*?(bots|api)[\\/]/, "");
 			force = filter;
 			rootDir = configure._meta.microserviceDir;
 			configure = buildConfig(rootDir);
@@ -66,21 +67,24 @@ program
 			});
 		}
 
+		let regions = Array.from(new Set([].concat(program.region).concat(configure.regions))).filter(a => !!a);
 		start.then(cf => createCloudFormation(configure._meta.microserviceDir, {
 			config: configure,
 			filter: filter,
 			publish: program.run || !program.build,
 			force: force,
-			regions: program.region ? [].concat(program.region) : configure.regions,
+			regions: regions.length && regions, // program.region ? [].concat(program.region) : configure.regions,
 			public: program.public,
 			cloudformation: cf,
-			overrideCloudFormationFile: !cf,
+			overrideCloudFormationFile: !cf && !program.build,
 			alias: process.env.LEO_ENV,
-			region: process.env.LEO_REGION
+			region: process.env.LEO_REGION,
+			tag: program.tag
 		}).then((data) => {
 
 			if (program.run || !program.build) {
 				console.log("\n---------------Publish Complete---------------");
+				console.log(data.filter(d => d.region == program.region)[0].url + "cloudformation.json");
 			} else {
 				console.log("\n---------------Build Complete---------------");
 			}
@@ -97,7 +101,8 @@ program
 					Parameters: Object.keys(bucket.cloudFormation.Parameters || {}).map(key => {
 						return {
 							ParameterKey: key,
-							UsePreviousValue: true
+							UsePreviousValue: true,
+							NoEcho: bucket.cloudFormation.Parameters[key].NoEcho
 						}
 					})
 				}).then(data => {
