@@ -14,7 +14,7 @@ program
 	.option("-e, --env [env]", "Environment")
 	.option("--region [region]", "Region to run cloudformation")
 	.usage('<dir> [options]')
-	.action(function(dir) {
+	.action(function (dir) {
 		let rootDir = path.resolve(process.cwd(), dir);
 		let watchDir = utils.findFirstPackageValue(rootDir, ["microservice"], "__directory");
 		var pkg = require(path.resolve(rootDir, "package.json"));
@@ -30,9 +30,12 @@ program
 					env: Object.assign({}, process.env, {
 						LEO_ENV: program.env || "dev",
 						LEO_REGION: program.region,
-						LEO_CONFIG: JSON.stringify(buildConfig(rootDir))
-					})
+						LEO_CONFIG: JSON.stringify(buildConfig(rootDir)),
+						LEO_PREVENT_RUN_AGAIN: "true"
+					}),
+					//execArgv: ["--inspect", "--debug-brk"]
 				});
+				//process.kill(child.pid, 'USR1');
 				child.once("exit", () => {
 					child = null;
 				});
