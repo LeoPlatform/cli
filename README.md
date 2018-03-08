@@ -27,6 +27,14 @@ npm install leo-cli -g
 How to use the Leo CLI
 ===================================
 
+Configure the Leo CLI
+---------------
+The CLI must be aware of your [bus](https://github.com/LeoPlatform/bus "Leo Platform Bus")
+
+```
+leo-cli configure <bus-stack-name> <region>
+```
+
 Create a System
 ---------------
 A system is the root directory for a group of microservices & bots.  This command will create a directory for the system.
