@@ -5,7 +5,7 @@ const ls = leo.streams;
 
 
 exports.handler = function(event, context, callback) {
-	const ID = event.botId;
+	const ID = context.botId;
 
 	// Do work
 	callback();

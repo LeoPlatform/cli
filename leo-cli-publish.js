@@ -22,7 +22,7 @@ program
 	.option("--awsprofile [awsprofile]", "AWS Profile to use")
 	.option("--tag [tag]", "Tag for publish directory.  eg. prod")
 	.usage('<dir> [options]')
-	.action(function (dir) {
+	.action(function(dir) {
 		let env = program.env || "dev";
 		// console.log(env)
 		let rootDir = path.resolve(process.cwd(), dir);
@@ -33,7 +33,7 @@ program
 		let filter = program.filter;
 		let force = program.force;
 		if (configure.type !== "microservice" && configure._meta.microserviceDir) {
-			filter = rootDir.replace(/^.*?(bots|api)[\\/]/, "")
+			filter = rootDir.replace(/^.*?(bots|api)[\\/]/, "");
 			force = filter;
 			rootDir = configure._meta.microserviceDir;
 			configure = buildConfig(rootDir);
@@ -84,6 +84,7 @@ program
 
 			if (program.run || !program.build) {
 				console.log("\n---------------Publish Complete---------------");
+				console.log(data.filter(d => d.region == program.region)[0].url + "cloudformation.json");
 			} else {
 				console.log("\n---------------Build Complete---------------");
 			}
