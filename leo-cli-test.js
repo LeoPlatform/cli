@@ -14,7 +14,7 @@ program
 	.option("-e, --env [env]", "Environment")
 	.option("--region [region]", "Region to run cloudformation")
 	.usage('<dir> [options]')
-	.action(function (dir) {
+	.action(function(dir) {
 		let rootDir = path.resolve(process.cwd(), dir);
 		let watchDir = utils.findFirstPackageValue(rootDir, ["microservice"], "__directory");
 		var pkg = require(path.resolve(rootDir, "package.json"));
@@ -58,7 +58,8 @@ program
 		});
 
 		run();
-		let watchDirs = [watchDir].concat(pkg.config.test ? pkg.config.test.watch : []);
+		let watchDirs = (watchDir ? [watchDir] : []).concat(pkg.config.test ? pkg.config.test.watch : []);
+		console.log(watchDirs);
 		var watcher = watch(watchDirs, {
 			recursive: true,
 			filter: (f) => {
