@@ -14,19 +14,22 @@ const generateProfile = require("leo-sdk/lib/generateProfile.js");
 program
 	.version('0.0.1')
 	.option("-g, --global", "Install Globally")
-	.option("--region [region]", "Region to run cloudformation")
+	.option("--awsprofile [profile]", "Region to run cloudformation")
 	.usage('<stack> <region> <dir> [options]')
 	.action(function(stack, region, dir, options) {
 		if (typeof dir === "object") {
 			options = dir;
 			dir = ".";
 		}
+		options = Object.assign({
+			global: false
+		}, options || {});
 		if (options.global) {
 			dir = null;
 		}
-		generateProfile(stack, {
+		generateProfile(stack, Object.assign({
 			region: region
-		}, dir, (err) => {
+		}, options), dir, (err) => {
 			console.log("done");
 		});
 	})
