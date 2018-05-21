@@ -7,9 +7,9 @@ var colors = require('colors');
 
 program
 	.version('0.0.2')
-	.arguments('<type> <dir>')
-	.usage('<type> <dir> [options]')
-	.action(function(type, dir) {
+	.arguments('<type> <subtype> [dir] ')
+	.usage('<type> [subtype] <dir> [options]')
+	.action(function(type, subtype, dir) {
 		var pkgname = null;
 		let declaredType = type = type.toLowerCase();
 
@@ -24,9 +24,34 @@ program
 			offload: path.normalize("bots/"),
 			resource: path.normalize("apis/"),
 		};
+		let templatePath = null;
 
 		if (['system', 'microservice', 'resource', 'load', 'enrich', 'offload'].indexOf(type) === -1) {
+			let paths = require('module')._nodeModulePaths(process.cwd());
+			let modulePathExits = false;
+			for (var key in paths) {
+				let p = path.resolve(paths[key], `${type}/templates/${subtype}`);
+				modulePathExits = modulePathExits || fs.existsSync(path.resolve(paths[key], `${type}`));
+				if (fs.existsSync(p)) {
+					templatePath = p
+					break;
+				}
+			}
+			if (dir && subtype && !templatePath) {
+				if (!modulePathExits) {
+					console.log(`Missing module '${type}'.  Run 'npm install ${type}' to install the module`);
+				} else {
+					console.log(`Unable to find template '${subtype}' in module '${type}/templates'`);
+				}
+				process.exit(1);
+			} else if (!templatePath) {
+				dir = subtype;
+				subtype = undefined;
+			}
 			type = "bot";
+		} else {
+			dir = subtype;
+			subtype = undefined;
 		}
 		let prefix = "./";
 
@@ -37,6 +62,8 @@ program
 		if (!fs.existsSync(prefix)) {
 			fs.mkdirSync(prefix);
 		}
+
+
 		if (!fs.existsSync(prefix + dir)) {
 			if (type == "microservice") {
 
@@ -57,16 +84,15 @@ program
 					console.log(`Type ${type} must be within a system or microservice package`);
 					process.exit(1);
 				}
-
-				copyDirectorySync(__dirname + `/templates/${type}`, prefix + dir, {
+				templatePath = templatePath || `${__dirname}/templates/${type}`;
+				copyDirectorySync(templatePath, prefix + dir, {
 					'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_'),
 					'____BOTNAME____': parentName + "-" + dir.replace(/\s+/g, '_'),
 					'____BOTTYPE____': declaredType
 				});
 			}
-
 			process.chdir(prefix + dir);
-			console.log("done");
+			console.log(`Finished creating '${dir}'`);
 
 		} else {
 			console.log("Directory already exists");
