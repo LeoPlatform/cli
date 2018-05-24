@@ -16,6 +16,7 @@
         "autoprefixer": "^6.0.3",
         "aws-sdk": "^2.222.1",
         "babel-loader": "^7.1.4",
+        "babel-preset-env": "^1.7.0",
         "babel-register": "^6.26.0",
         "babelify": "^8.0.0",
         "backoff": "^2.5.0",
