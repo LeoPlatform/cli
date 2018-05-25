@@ -9,10 +9,10 @@ program
 	.version('0.0.2')
 	.arguments('<type> <subtype> [dir] ')
 	.usage('<type> [subtype] <dir> [options]')
-	.action(function(type, subtype, dir) {
+	.action(async function(type, subtype, dir) {
+
 		var pkgname = null;
 		let declaredType = type = type.toLowerCase();
-
 
 		var parentType = findFirstPackageValue(process.cwd(), [], "type");
 		var parentName = findFirstPackageValue(process.cwd(), [], "name");
@@ -26,7 +26,7 @@ program
 		};
 		let templatePath = null;
 
-		if (['system', 'microservice', 'resource', 'load', 'enrich', 'offload'].indexOf(type) === -1) {
+		if (['system', 'microservice', 'resource', 'load', 'enrich', 'offload', 'quickstart'].indexOf(type) === -1) {
 			let paths = require('module')._nodeModulePaths(process.cwd());
 			let modulePathExits = false;
 			for (var key in paths) {
@@ -63,34 +63,37 @@ program
 			fs.mkdirSync(prefix);
 		}
 
-
 		if (!fs.existsSync(prefix + dir)) {
-			if (type == "microservice") {
+			let context = await require(__dirname + '/templates/' + type + '/setup.js')();
 
-				if (parentType != "system") {
-					console.log(`Type ${type} must be within a system package`);
-					process.exit(1);
-				}
+			switch (type) {
+				case 'quickstart':
+					copyDirectorySync(__dirname + "/templates/" + type, prefix + dir, {
+						'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_')
+					});
+				break;
 
-				copyDirectorySync(__dirname + "/templates/microservice", prefix + dir, {
-					'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_')
-				});
-			} else if (type == "system") {
-				copyDirectorySync(__dirname + "/templates/system", prefix + dir, {
-					'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_')
-				});
-			} else {
-				if (parentType != "microservice" && parentType != "system") {
-					console.log(`Type ${type} must be within a system or microservice package`);
-					process.exit(1);
-				}
-				templatePath = templatePath || `${__dirname}/templates/${type}`;
-				copyDirectorySync(templatePath, prefix + dir, {
-					'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_'),
-					'____BOTNAME____': parentName + "-" + dir.replace(/\s+/g, '_'),
-					'____BOTTYPE____': declaredType
-				});
+				case 'microservice':
+				case 'system':
+					copyDirectorySync(__dirname + "/templates/" + type, prefix + dir, {
+						'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_')
+					});
+				break;
+
+				default:
+					if (parentType != "microservice" && parentType != "system") {
+						console.log(`Type ${type} must be within a system or microservice package`);
+						process.exit(1);
+					}
+					templatePath = templatePath || `${__dirname}/templates/${type}`;
+					copyDirectorySync(templatePath, prefix + dir, {
+						'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_'),
+						'____BOTNAME____': parentName + "-" + dir.replace(/\s+/g, '_'),
+						'____BOTTYPE____': declaredType
+					});
+				break;
 			}
+
 			process.chdir(prefix + dir);
 			console.log(`Finished creating '${dir}'`);
 

@@ -2,8 +2,8 @@
 
 require("babel-register");
 
-var program = require('commander');
-var configure = require("./package.json");
+let program = require('commander');
+let configure = require("./package.json");
 program
 	.version(configure.version)
 	.command('publish [directory]', "Publish your project to S3")

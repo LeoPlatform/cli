@@ -1,0 +1,28 @@
+{
+	"name": "quickstart-sampleload",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"directories": {
+		"test": "test"
+	},
+	"scripts": {
+		"test": "leo-cli test . "
+	},
+	"config": {
+		"leo": {
+			"type": "cron",
+			"memory": 128,
+			"timeout": 10,
+			"role": "ApiRole",
+			"env": {},
+			"cron": {
+				"settings": {
+					"source": "system:quickstart",
+					"destination": "quickstart_random_numbers"
+				},
+				"time": "0 */1 * * * * "
+			}
+		}
+	}
+}

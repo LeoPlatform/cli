@@ -1,0 +1,19 @@
+{
+	"name": "quickstart",
+	"version": "1.0.0",
+	"description": "",
+	"main": "app.js",
+	"scripts": {},
+	"config": {
+		"leo": {
+			"type": "microservice",
+			"stacks": [
+				"leosdk"
+			]
+		}
+	},
+	"dependencies": {
+		"leo-config": ">=1.0.0",
+		"leo-sdk": ">=1.0.0"
+	}
+}
