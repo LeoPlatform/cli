@@ -1,5 +1,5 @@
 {
-	"name": "____DIRNAME____-test",
+	"name": "____DIRNAME____-api-test",
 	"version": "1.0.0",
 	"description": "This is a sample ApiGateway Description",
 	"main": "index.js",

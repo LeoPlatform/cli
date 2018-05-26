@@ -101,11 +101,13 @@ program
 			switch (type) {
 				case 'quickstart':
 				case 'microservice':
+				case 'react':
 				case 'system':
 					copyDirectorySync(__dirname + "/templates/" + type, prefix + dir, {
 						'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_')
 					}, [
-						/setup\.js$/
+						/setup\.js$/,
+						/node_modules/
 					]);
 					break;
 
@@ -120,7 +122,8 @@ program
 						'____BOTNAME____': parentName + "-" + dir.replace(/\s+/g, '_'),
 						'____BOTTYPE____': declaredType
 					}, [
-						/setup\.js$/
+						/setup\.js$/,
+						/node_modules/
 					]);
 					break;
 			}
