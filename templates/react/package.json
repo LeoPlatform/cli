@@ -15,7 +15,11 @@
 		}
 	},
 	"dependencies": {
+		"babel-plugin-transform-decorators-legacy": "^1.3.4",
 		"babel-preset-react": "^6.24.1",
-		"react": "^16.4.0"
+		"leo-auth": "^1.0.3",
+		"leo-config": "^1.0.1",
+		"react": "^16.4.0",
+		"react-dom": "^16.4.0"
 	}
 }

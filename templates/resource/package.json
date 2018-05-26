@@ -1,0 +1,26 @@
+{
+  "name": "____DIRNAME____",
+  "version": "1.0.0",
+  "description": "This is a sample ApiGateway Description",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "leo test ."
+  },
+  "config": {
+    "leo": {
+      "type": "resource",
+      "uri": "POST:/api/____DIRNAME____",
+      "name": "____PACKAGE_NAME_____api_____DIRNAME____",
+      "handler": "handler",
+      "role": null,
+      "memory": 128,
+      "timeout": 3
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

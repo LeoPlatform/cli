@@ -1,5 +1,5 @@
 {
-	"name": "list",
+	"name": "____DIRNAME____-test",
 	"version": "1.0.0",
 	"description": "This is a sample ApiGateway Description",
 	"main": "index.js",
@@ -7,13 +7,13 @@
 		"test": "test"
 	},
 	"scripts": {
-		"test": "mocha --recursive -w "
+		"test": "leo test . "
 	},
 	"config": {
 		"leo": {
 			"type": "resource",
-			"uri": "GET:/api/list",
-			"name": "leo_react_template_list",
+			"uri": "GET:/api/test",
+			"name": "test",
 			"handler": "handler",
 			"role": null,
 			"memory": 128,

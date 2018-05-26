@@ -25,6 +25,8 @@ program
 
 		if (pkg.config && pkg.config.leo && pkg.config.leo.type == "microservice") {
 			let c = buildConfig(rootDir);
+			process.env.NODE_ENV = program.env || "dev";
+			process.env.LEO_LOCAL = "true";
 			reactRunner(rootDir, c, c);
 		} else {
 			let child = null;
@@ -35,6 +37,7 @@ program
 						cwd: rootDir,
 						env: Object.assign({}, process.env, {
 							NODE_ENV: program.env || "dev",
+							LEO_LOCAL: "true",
 							LEO_ENV: program.env || "dev",
 							LEO_REGION: program.region,
 							LEO_CONFIG: JSON.stringify(buildConfig(rootDir)),
@@ -66,7 +69,6 @@ program
 
 			run();
 			let watchDirs = (watchDir ? [watchDir] : []).concat(pkg.config.test ? pkg.config.test.watch : []);
-			console.log(watchDirs);
 			var watcher = watch(watchDirs, {
 				recursive: true,
 				filter: (f) => {

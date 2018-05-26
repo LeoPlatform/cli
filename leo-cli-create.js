@@ -26,7 +26,9 @@ program
 		};
 		let templatePath = null;
 
-		if (['system', 'microservice', 'resource', 'load', 'enrich', 'offload', 'quickstart'].indexOf(type) === -1) {
+		let dirs = fs.readdirSync(path.resolve(__dirname, "./templates"));
+
+		if (dirs.indexOf(type) === -1) {
 			let paths = require('module')._nodeModulePaths(process.cwd());
 			let modulePathExits = false;
 			for (var key in paths) {
@@ -47,8 +49,9 @@ program
 			} else if (!templatePath) {
 				dir = subtype;
 				subtype = undefined;
+				console.log(`Unable to find template '${type}'`);
+				process.exit(1);
 			}
-			type = "bot";
 		} else {
 			dir = subtype;
 			subtype = undefined;
@@ -68,22 +71,31 @@ program
 				createLeoConfig: require("./lib/createLeoConfig.js"),
 				createLeoEnviornments: require('./lib/createLeoEnviornments.js'),
 				storeLeoConfigJS: function(template) {
-					fs.writeFileSync("./leo_config.js", template);
+					fs.writeFileSync(path.resolve(prefix + dir, "leo_config.js"), template);
 				},
-				npmInstall: function(dir) {
-					if (!dir) {
-						dir = process.cwd();
+				npmInstall: function(cwd) {
+					if (!cwd) {
+						cwd = path.resolve(prefix + dir);
+					} else {
+						cwd = path.resolve(cwd);
 					}
-					dir = path.resolve(dir);
-					console.log(`------ Running NPM Install on "${dir}" ------`);
+					console.log(`------ Running NPM Install on "${cwd}" ------`);
 					require('child_process').execSync("npm install", {
-						cwd: dir
+						cwd: cwd
 					});
 				}
 			};
 
-			let setup = require(__dirname + '/templates/' + type + '/setup.js');
 
+
+			let setupFile = path.resolve(__dirname, 'templates/', type, 'setup.js');
+			let setup = {
+				inquire: () => {},
+				process: () => {}
+			}
+			if (fs.existsSync(setupFile)) {
+				setup = require(setupFile);
+			}
 			let setupContext = await setup.inquire(utils);
 
 			switch (type) {

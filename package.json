@@ -61,6 +61,8 @@
         "json-loader": "^0.5.7",
         "later": "^1.2.0",
         "leo-auth": "^1.0.2",
+        "leo-aws": "^1.0.1",
+        "leo-config": "^1.0.1",
         "leo-sdk": "^1.0.65",
         "less": "^2.7.1",
         "less-loader": "^4.1.0",
@@ -93,7 +95,7 @@
         "vinyl-buffer": "^1.0.0",
         "vinyl-source-stream": "^1.1.0",
         "watchify": "^3.7.0",
-        "webpack": "^4.5.0",
+        "webpack": "^4.9.1",
         "webpack-dev-middleware": "^1.12.2",
         "webpack-hot-middleware": "^2.21.2"
     },
