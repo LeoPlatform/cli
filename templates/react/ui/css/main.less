@@ -1,0 +1,40 @@
+@import "normalize.css";
+
+html, body,div#root,div#root>section {
+  height: 100%;
+  overflow: hidden;
+  background: url(../images/test.png);
+}
+
+div#root>section {
+	>header {
+		height: 60px;
+		background: lightblue;
+		ul {
+			margin: 0;
+			list-style: none;
+			overflow: hidden;
+			position: relative;
+			li {
+				float: left;
+				display: block;
+				margin-right: 30px;
+				border: 1px solid black;
+				cursor: pointer;
+
+				&.selected {
+					background: blue;
+					color: white;
+				}
+
+			}
+		}
+	}
+	>div {
+		height: calc(~"100% - 180px");
+	}
+	>footer {
+		height: 120px;
+		background: lightgreen;
+	}
+}

@@ -34,6 +34,7 @@ program
 					child = fork(__dirname + "/lib/runner.js", process.argv, {
 						cwd: rootDir,
 						env: Object.assign({}, process.env, {
+							NODE_ENV: program.env || "dev",
 							LEO_ENV: program.env || "dev",
 							LEO_REGION: program.region,
 							LEO_CONFIG: JSON.stringify(buildConfig(rootDir)),

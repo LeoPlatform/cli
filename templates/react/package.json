@@ -10,7 +10,12 @@
 	},
 	"config": {
 		"leo": {
-			"type": "microservice"
+			"type": "microservice",
+			"subtype": "react"
 		}
+	},
+	"dependencies": {
+		"babel-preset-react": "^6.24.1",
+		"react": "^16.4.0"
 	}
 }

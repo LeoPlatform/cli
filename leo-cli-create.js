@@ -69,6 +69,16 @@ program
 				createLeoEnviornments: require('./lib/createLeoEnviornments.js'),
 				storeLeoConfigJS: function(template) {
 					fs.writeFileSync("./leo_config.js", template);
+				},
+				npmInstall: function(dir) {
+					if (!dir) {
+						dir = process.cwd();
+					}
+					dir = path.resolve(dir);
+					console.log(`------ Running NPM Install on "${dir}" ------`);
+					require('child_process').execSync("npm install", {
+						cwd: dir
+					});
 				}
 			};
 
@@ -102,13 +112,11 @@ program
 					]);
 					break;
 			}
-
-			process.chdir(prefix + dir);
 			await setup.process(utils, setupContext);
 
-			require('child_process').execSync("npm install");
-			console.log(`Finished creating '${dir}'`);
+			utils.npmInstall();
 
+			console.log(`OK: Finished creating '${dir}'`);
 		} else {
 			console.log("Directory already exists");
 		}

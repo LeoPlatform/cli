@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <base href="__BASE_HREF__"/>
+    <title>Leo Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+
+    <link rel="stylesheet" href="__STATIC_URI__/css/index.css">
+
+    <script src="https://code.jquery.com/jquery-2.2.3.min.js"
+            integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo=" crossorigin="anonymous"></script>
+    <script src="__CLOUD_FRONT_URI__/leo_micro/26/js/aws-sdk.min.js"></script>
+    <script type="text/javascript" src="__CLOUD_FRONT_URI__/leo_micro/26/js/lib/leoApiGateway.js"></script>
+    <script src="__STATIC_URI__/js/common.js"></script>
+    <script src="__STATIC_URI__/js/index.js"></script>
+</head>
+<body>
+<div id="root">
+
+</div>
+<script type="text/javascript">
+    window.leostaticcdn = "__STATIC_URI__";
+    LEOCognito.start('__COGNITO_ID__', false, {apiUri: "api/", region: "us-west-2", cognito_region: "us-west-2"});
+</script>
+</body>
+</html>
