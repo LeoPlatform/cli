@@ -64,21 +64,28 @@ program
 		}
 
 		if (!fs.existsSync(prefix + dir)) {
-			let context = await require(__dirname + '/templates/' + type + '/setup.js')();
+			let utils = {
+				createLeoConfig: require("./lib/createLeoConfig.js"),
+				createLeoEnviornments: require('./lib/createLeoEnviornments.js'),
+				storeLeoConfigJS: function(template) {
+					fs.writeFileSync("./leo_config.js", template);
+				}
+			};
+
+			let setup = require(__dirname + '/templates/' + type + '/setup.js');
+
+			let setupContext = await setup.inquire(utils);
 
 			switch (type) {
 				case 'quickstart':
-					copyDirectorySync(__dirname + "/templates/" + type, prefix + dir, {
-						'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_')
-					});
-				break;
-
 				case 'microservice':
 				case 'system':
 					copyDirectorySync(__dirname + "/templates/" + type, prefix + dir, {
 						'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_')
-					});
-				break;
+					}, [
+						/setup\.js$/
+					]);
+					break;
 
 				default:
 					if (parentType != "microservice" && parentType != "system") {
@@ -90,11 +97,16 @@ program
 						'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_'),
 						'____BOTNAME____': parentName + "-" + dir.replace(/\s+/g, '_'),
 						'____BOTTYPE____': declaredType
-					});
-				break;
+					}, [
+						/setup\.js$/
+					]);
+					break;
 			}
 
 			process.chdir(prefix + dir);
+			await setup.process(utils, setupContext);
+
+			require('child_process').execSync("npm install");
 			console.log(`Finished creating '${dir}'`);
 
 		} else {
@@ -107,19 +119,23 @@ if (!process.argv.slice(2).length) {
 	program.outputHelp(colors.red);
 }
 
-function copyDirectorySync(src, dest, replacements) {
+function copyDirectorySync(src, dest, replacements, ignore = []) {
+	for (var i = 0; i < ignore.length; i++) {
+		if (src.match(ignore[i])) {
+			return;
+		}
+	}
 	var stats = fs.statSync(src);
 	if (stats.isDirectory()) {
 		fs.mkdirSync(dest);
 		fs.readdirSync(src).forEach(function(entry) {
-			copyDirectorySync(path.join(src, entry), path.join(dest, entry), replacements);
+			copyDirectorySync(path.join(src, entry), path.join(dest, entry), replacements, ignore);
 		});
 	} else {
 		var fileText = fs.readFileSync(src).toString('utf8');
 		for (var replaceVar in replacements) {
 			fileText = fileText.replace(new RegExp(replaceVar, 'g'), replacements[replaceVar]);
 		}
-
 		fs.writeFileSync(dest, fileText);
 	}
 }

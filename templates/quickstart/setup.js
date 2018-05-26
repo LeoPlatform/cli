@@ -1,22 +1,18 @@
 'use strict';
 
-const getstackprofile = require('leo-aws/utils/getLeoStackProfile');
-let prompt = require("prompt-sync")();
+// let prompt = require("prompt-sync")();
 
-module.exports = async function() {
-	// let environments = prompt('Which environments would you like to setup? (comma delimited): ');
+module.exports = {
+	inquire: async function(utils) {
+		let enviornments = await utils.createLeoEnviornments();
+		let template = utils.createLeoConfig(enviornments);
+		return {
+			template: template
+		};
+	},
 
-	// environments = environments.split(/\s*,\s*/);
-	let stackProfile = await getstackprofile('LeoTestBus', {
-		'region': 'us-west-2',
-		'profile': 'leotest'
-	});
-
-	console.log(stackProfile);
-	// console.log(environments);
-
-
-	// return environments;
+	process: async function(utils, context) {
+		utils.storeLeoConfigJS(context.template);
+		return {};
+	}
 };
-
-console.log('done');
