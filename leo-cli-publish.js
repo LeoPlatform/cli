@@ -14,104 +14,80 @@ program
 	.arguments('[directory] [options]')
 	.usage('[directory] [options]');
 
-if (!process.argv.slice(2).length) {
-	program.outputHelp(colors.red);
-} else {
-	(async function run() {
-		program.parse(process.argv);
-		let [dir] = program.args;
-		let rootDir;
-		if (!dir) {
-			rootDir = process.cwd();
-		} else {
-			rootDir = path.resolve(process.cwd(), dir);
-		}
+(async function run() {
+	program.parse(process.argv);
+	let [dir] = program.args;
+	let rootDir;
+	if (!dir) {
+		rootDir = process.cwd();
+	} else {
+		rootDir = path.resolve(process.cwd(), dir);
+	}
 
-		let env = program.env || "dev";
-		program.run = program.run || program.deploy;
-		let filter = program.filter;
-		let force = program.force;
+	let env = program.env || "dev";
+	program.run = program.run || program.deploy;
+	let filter = program.filter;
+	let force = program.force;
 
-		process.env.NODE_ENV = process.env.LEO_ENV = env;
-		process.env.LEO_REGION = program.region;
+	process.env.NODE_ENV = process.env.LEO_ENV = env;
+	process.env.LEO_REGION = program.region;
 
-		let config = require("leo-config/lib/build").dynamicBuild(rootDir);
-		var buildConfig = require("./lib/build-config").build;
-		let pkgConfig = buildConfig(rootDir);
-		console.log("BUILDING ", rootDir);
+	let config = require("leo-config/lib/build").dynamicBuild(rootDir);
+	var buildConfig = require("./lib/build-config").build;
+	let pkgConfig = buildConfig(rootDir);
+	console.log("BUILDING ", rootDir);
 
-		if (pkgConfig.type !== "microservice" && pkgConfig._meta.microserviceDir) {
-			filter = rootDir.replace(/^.*?(bots|api)[\\/]/, "");
-			force = filter;
-			rootDir = pkgConfig._meta.microserviceDir;
-			pkgConfig = buildConfig(rootDir);
-			config = require("leo-config/lib/build").dynamicBuild(rootDir);
-		}
-		if (!config.leopublish || !config.leopublish.regions) {
-			console.log("YOU HAVE NOT SETUP YOUR LEOPUBLISH");
-			process.exit();
-		}
-		let publishConfig = config.leopublish;
-
-
-
-		//@TODO....I don't quite get how to do this yet
-		//WHERE SHOULD I GET THE BASE cloudformatoin from???????????
-		// let cloudformation = config.leopublish.leoaws.cloudformation;
-		let cf = {};
-		// if (publishConfig.stack) {
-		// 	cf = await cloudformation.get(config.leopublish.stack).catch(err => {
-		// 		if (err.message.match(/^Stack.*does not exist/)) {
-		// 			return {};
-		// 		} else {
-		// 			throw err;
-		// 		}
-		// 	});
-		// }
-
-		let data = await require("./lib/cloud-formation.js").createCloudFormation(rootDir, {
-			config: pkgConfig,
-			filter: filter,
-			publish: program.run || !program.build,
-			force: force,
-			regions: publishConfig.regions,
-			public: program.public,
-			cloudformation: cf,
-			overrideCloudFormationFile: !cf && !program.build,
-			alias: process.env.LEO_ENV,
-			region: process.env.LEO_REGION,
-			tag: program.tag
-		});
-		if (program.run || !program.build) {
-			console.log("\n---------------Publish Complete---------------");
-			console.log(data.filter(d => d.region == program.region)[0].url + "cloudformation.json");
-		} else {
-			console.log("\n---------------Build Complete---------------");
-		}
-		if (program.run && typeof program.run === "string") {
-			let bucket = data.filter(d => d.region == program.region)[0];
-			let url = bucket.url + "cloudformation.json"
-			let updateStart = Date.now();
-			console.log(`\n---------------Updating stack "${program.run}"---------------`);
+	if (pkgConfig.type !== "microservice" && pkgConfig._meta.microserviceDir) {
+		filter = rootDir.replace(/^.*?(bots|api)[\\/]/, "");
+		force = filter;
+		rootDir = pkgConfig._meta.microserviceDir;
+		pkgConfig = buildConfig(rootDir);
+		config = require("leo-config/lib/build").dynamicBuild(rootDir);
+	}
+	if (!config.leopublish) {
+		console.log("YOU HAVE NOT SETUP YOUR LEOPUBLISH");
+		process.exit();
+	}
+	let publishConfig = await config.leopublish;
+	let data = await require("./lib/cloud-formation.js").createCloudFormation(rootDir, {
+		config: pkgConfig,
+		force: force,
+		targets: Object.keys(publishConfig).map(r => publishConfig[r]),
+		filter: filter,
+		alias: process.env.NODE_ENV,
+		publish: program.run || !program.build,
+		tag: program.tag
+	});
+	console.log("\n---------------Publish Complete---------------");
+	data.forEach(publish => {
+		console.log(publish.url + "cloudformation.json")
+	});
+	if (program.run || !program.build) {
+		data.forEach(publish => {
+			let url = publish.url + "cloudformation.json"
+			console.time("Update Complete");
+			console.log(`\n---------------Updating stack "${publish.target.stack} ${publish.region}"---------------`);
 			console.log(`url: ${url}`);
 			let progress = setInterval(() => {
 				process.stdout.write(".")
 			}, 2000);
-			cloudformation.run(program.run, program.region, url, {
-				Parameters: Object.keys(bucket.cloudFormation.Parameters || {}).map(key => {
+			publish.target.leoaws.cloudformation.run(publish.target.stack, url, {
+				Parameters: Object.keys(publish.cloudFormation.Parameters || {}).map(key => {
 					return {
 						ParameterKey: key,
 						UsePreviousValue: true,
-						NoEcho: bucket.cloudFormation.Parameters[key].NoEcho
+						NoEcho: publish.cloudFormation.Parameters[key].NoEcho
 					}
 				})
 			}).then(data => {
 				clearInterval(progress);
-				console.log(` Update Complete ${Date.now() - updateStart}`);
+				console.timeEnd("Update Complete");
 			}).catch(err => {
 				clearInterval(progress);
 				console.log(" Update Error:", err);
 			});
-		}
-	})();
-}
+		});
+	} else {
+		console.log("\n---------------Build Complete---------------");
+	}
+})();
