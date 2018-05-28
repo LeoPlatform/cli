@@ -16,13 +16,16 @@ program
 
 		var parentType = findFirstPackageValue(process.cwd(), [], "type");
 		var parentName = findFirstPackageValue(process.cwd(), [], "name");
+		if (!parentName) {
+			parentName = '';
+		}
 
 		let roots = {
 			bot: path.normalize("bots/"),
 			load: path.normalize("bots/"),
 			enrich: path.normalize("bots/"),
 			offload: path.normalize("bots/"),
-			resource: path.normalize("apis/"),
+			resource: path.normalize("api/"),
 		};
 		let templatePath = null;
 
@@ -104,7 +107,8 @@ program
 				case 'react':
 				case 'system':
 					copyDirectorySync(__dirname + "/templates/" + type, prefix + dir, {
-						'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_')
+						'____DIRPATH____': parentName + "-" + dir.replace(/\s+/g, '_'),
+						'____DIRNAME____': dir.replace(/[^a-zA-Z0-9]+/g, '_')
 					}, [
 						/setup\.js$/,
 						/node_modules/
@@ -118,8 +122,9 @@ program
 					}
 					templatePath = templatePath || `${__dirname}/templates/${type}`;
 					copyDirectorySync(templatePath, prefix + dir, {
-						'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_'),
-						'____BOTNAME____': parentName + "-" + dir.replace(/\s+/g, '_'),
+						'____DIRPATH____': parentName + "-" + dir.replace(/[^a-zA-Z0-9]+/g, '_'),
+						'____DIRNAME____': dir.replace(/[^a-zA-Z0-9]+/g, '_'),
+						'____BOTNAME____': parentName + "-" + dir.replace(/[^a-zA-Z0-9]+/g, '_'),
 						'____BOTTYPE____': declaredType
 					}, [
 						/setup\.js$/,

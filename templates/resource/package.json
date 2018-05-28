@@ -1,5 +1,5 @@
 {
-  "name": "____DIRNAME____",
+  "name": "____BOTNAME____",
   "version": "1.0.0",
   "description": "This is a sample ApiGateway Description",
   "main": "index.js",
@@ -12,12 +12,11 @@
   "config": {
     "leo": {
       "type": "resource",
-      "uri": "POST:/api/____DIRNAME____",
-      "name": "____PACKAGE_NAME_____api_____DIRNAME____",
+      "uri": "*:/api/____DIRNAME____",
       "handler": "handler",
       "role": null,
-      "memory": 128,
-      "timeout": 3
+      "memory": 256,
+      "timeout": 10
     }
   },
   "keywords": [],
