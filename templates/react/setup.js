@@ -1,9 +1,9 @@
 'use strict';
 module.exports = {
 	inquire: async function (utils) {
-		let enviornments = await utils.createLeoEnviornments();
+		let environments = await utils.createLeoEnvironments();
 		return {
-			template: utils.createLeoConfig(enviornments)
+			template: utils.createLeoConfig(environments)
 		};
 	},
 

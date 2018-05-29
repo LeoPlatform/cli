@@ -72,7 +72,7 @@ program
 		if (!fs.existsSync(prefix + dir)) {
 			let utils = {
 				createLeoConfig: require("./lib/createLeoConfig.js"),
-				createLeoEnviornments: require('./lib/createLeoEnviornments.js'),
+				createLeoEnvironments: require('./lib/createLeoEnvironments.js'),
 				storeLeoConfigJS: function(template) {
 					fs.writeFileSync(path.resolve(prefix + dir, "leo_config.js"), template);
 				},
