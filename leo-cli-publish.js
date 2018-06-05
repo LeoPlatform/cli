@@ -58,11 +58,17 @@ program
 		publish: program.run || !program.build,
 		tag: program.tag
 	});
-	console.log("\n---------------Publish Complete---------------");
-	data.forEach(publish => {
-		console.log(publish.url + "cloudformation.json")
-	});
+
 	if (program.run || !program.build) {
+		console.log("\n---------------Publish Complete---------------");
+		data.forEach(publish => {
+			console.log(publish.url + "cloudformation.json")
+		});
+	} else {
+		console.log("\n---------------Build Complete---------------");
+	}
+
+	if (program.run && typeof program.run === "string") {
 		data.forEach(publish => {
 			let url = publish.url + "cloudformation.json"
 			console.time("Update Complete");
@@ -87,7 +93,5 @@ program
 				console.log(" Update Error:", err);
 			});
 		});
-	} else {
-		console.log("\n---------------Build Complete---------------");
 	}
 })();

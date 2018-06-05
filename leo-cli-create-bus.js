@@ -11,7 +11,6 @@ const asyncForEach = async (array, callback) => {
 		await callback(array[index], index, array)
 	}
 };
-// let stacksetUrl = 'https://s3-us-west-2.amazonaws.com/leo-cli-publishbucket-g73tqa2cbod3/cloudformation/cloudformation.json';
 
 program
 	.version('0.0.1')
@@ -29,7 +28,7 @@ program
 
 		let stacknames = [];
 		// get existing stacks
-		let stacks = await getStacks(cloudformation, profile, region);
+		let stacks = await listStacks(cloudformation, profile, region);
 
 		stacks.StackSummaries.forEach((stack) => {
 			stacknames[stack.StackName] = stack.StackStatus;
@@ -39,17 +38,11 @@ program
 		let newstacks = buildStackParams(stackPrefix);
 
 		await asyncForEach(newstacks, async (stack) => {
-			let result = await buildStack(cloudformation, stack);
+			let result = await createStack(cloudformation, stack);
 
 			console.log(result);
 			console.log('done building stack', stack.StackName);
 		});
-		// newstacks.forEach(async (stack) => {
-		// 	let result = await buildStack(cloudformation, stack);
-		//
-		// 	console.log(result);
-		// 	console.log('done building stack', stack.StackName);
-		// });
 	})
 	.parse(process.argv);
 
@@ -58,7 +51,7 @@ if (!program.profile || !program.region) {
 	program.outputHelp(colors.red);
 }
 
-async function getStacks(cloudformation)
+async function listStacks(cloudformation)
 {
 	return new Promise((resolve, reject) => {
 		cloudformation.listStacks({}, (err, data) => {
@@ -91,7 +84,7 @@ function promptValidate(questionText, defaultVal, stacks)
 		if (defaultVal.length) {
 			return defaultVal;
 		} else {
-			console.log('You must input a value to continue');
+			console.log('You must an input a value to continue');
 			return promptValidate(questionText, defaultVal, stacks);
 		}
 	}
@@ -136,7 +129,7 @@ function buildStackParams(prefix)
 	return stacks;
 }
 
-async function buildStack(cloudformation, stack)
+async function createStack(cloudformation, stack)
 {
 	return new Promise((resolve, reject) => {
 		cloudformation.createStack(stack, async (err, data) => {
@@ -144,7 +137,7 @@ async function buildStack(cloudformation, stack)
 				reject(err);
 			}
 
-			await checkBuildStatus(cloudformation, stack.StackName).then(resolve).catch(reject);
+			resolve(await checkBuildStatus(cloudformation, stack.StackName));
 		});
 	});
 }
@@ -152,7 +145,7 @@ async function buildStack(cloudformation, stack)
 async function checkBuildStatus(cloudformation, stackName)
 {
 	return new Promise(async (resolve, reject) => {
-		let stacks = await getStacks(cloudformation);
+		let stacks = await listStacks(cloudformation);
 
 		stacks.StackSummaries.forEach(async (stack) => {
 			if (stack.StackName === stackName) {
@@ -187,15 +180,14 @@ async function checkBuildStatus(cloudformation, stackName)
 async function countdownTimer(seconds)
 {
 	return new Promise((resolve, reject) => {
-		let count = seconds;
 		let myinterval = setInterval(function() {
 			process.stdout.clearLine();  // clear current text
 			process.stdout.cursorTo(0);  // move cursor to beginning of line
-			process.stdout.write((count--).toString());
+			process.stdout.write((seconds--).toString());
 
-			if (count < 0) {
+			if (seconds < 0) {
 				clearInterval(myinterval);
-				console.log('');
+				process.stdout.clearLine();  // clear current text
 
 				resolve('done');
 			}
