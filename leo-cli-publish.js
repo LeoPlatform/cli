@@ -11,6 +11,7 @@ program
 	.option("--deploy [stack]", "Deploys the published cloudformation")
 	.option("--force [force]", "Force bots to publish")
 	.option("--filter [filter]", "Filter bots to publish")
+	.option("--public [public]", "Publish as public")
 	.arguments('[directory] [options]')
 	.usage('[directory] [options]');
 
@@ -56,7 +57,8 @@ program
 		filter: filter,
 		alias: process.env.NODE_ENV,
 		publish: program.run || !program.build,
-		tag: program.tag
+		tag: program.tag,
+		public: program.public || false
 	});
 
 	if (program.run || !program.build) {
