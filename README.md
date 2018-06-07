@@ -5,6 +5,8 @@ Leo CLI
 
 A Nodejs interface to interact with the Leo SDK and AWS
 
+Quick Start Guide: https://github.com/LeoPlatform/Leo
+
 Documentation: https://docs.leoplatform.io
 
 How to install the Leo CLI
