@@ -1,0 +1,20 @@
+{
+	"name": "PostgresConnector",
+	"version": "1.0.0",
+	"description": "Postgres connector",
+	"main": "index.js",
+	"directories": {
+		"test": "test"
+	},
+	"scripts": {
+		"test": "leo-cli test . "
+	},
+	"config": {
+		"leo": {
+			"type": "bot",
+			"memory": 256,
+			"timeout": 300,
+			"role": "ApiRole"
+		}
+	}
+}

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-var fs = require('fs');
-var path = require('path');
-var program = require('commander');
-var colors = require('colors');
+const fs = require('fs');
+const path = require('path');
+const program = require('commander');
+const colors = require('colors');
 
 program
 	.version('0.0.2')
@@ -11,11 +11,11 @@ program
 	.usage('<type> [subtype] <dir> [options]')
 	.action(async function(type, subtype, dir) {
 
-		var pkgname = null;
+		let pkgname = null;
 		let declaredType = type = type.toLowerCase();
 
-		var parentType = findFirstPackageValue(process.cwd(), [], "type");
-		var parentName = findFirstPackageValue(process.cwd(), [], "name");
+		let parentType = findFirstPackageValue(process.cwd(), [], "type");
+		let parentName = findFirstPackageValue(process.cwd(), [], "name");
 		if (!parentName) {
 			parentName = '';
 		}
@@ -34,7 +34,7 @@ program
 		if (dirs.indexOf(type) === -1) {
 			let paths = require('module')._nodeModulePaths(process.cwd());
 			let modulePathExits = false;
-			for (var key in paths) {
+			for (let key in paths) {
 				let p = path.resolve(paths[key], `${type}/templates/${subtype}`);
 				modulePathExits = modulePathExits || fs.existsSync(path.resolve(paths[key], `${type}`));
 				if (fs.existsSync(p)) {
@@ -89,19 +89,21 @@ program
 				}
 			};
 
-
-
 			let setupFile = path.resolve(__dirname, 'templates/', type, 'setup.js');
 			let setup = {
 				inquire: () => {},
 				process: () => {}
-			}
+			};
+
 			if (fs.existsSync(setupFile)) {
 				setup = require(setupFile);
 			}
 			let setupContext = await setup.inquire(utils);
 
 			switch (type) {
+				case 'checksum':
+				// case 'domainobject': // coming soon
+				// case 'elasticsearch': // coming soon
 				case 'quickstart':
 				case 'microservice':
 				case 'react':
@@ -113,7 +115,7 @@ program
 						/setup\.js$/,
 						/node_modules/
 					]);
-					break;
+				break;
 
 				default:
 					if (parentType != "microservice" && parentType != "system") {
@@ -130,7 +132,7 @@ program
 						/setup\.js$/,
 						/node_modules/
 					]);
-					break;
+				break;
 			}
 			await setup.process(utils, setupContext);
 
@@ -148,20 +150,20 @@ if (!process.argv.slice(2).length) {
 }
 
 function copyDirectorySync(src, dest, replacements, ignore = []) {
-	for (var i = 0; i < ignore.length; i++) {
+	for (let i = 0; i < ignore.length; i++) {
 		if (src.match(ignore[i])) {
 			return;
 		}
 	}
-	var stats = fs.statSync(src);
+	let stats = fs.statSync(src);
 	if (stats.isDirectory()) {
 		fs.mkdirSync(dest);
 		fs.readdirSync(src).forEach(function(entry) {
 			copyDirectorySync(path.join(src, entry), path.join(dest, entry), replacements, ignore);
 		});
 	} else {
-		var fileText = fs.readFileSync(src).toString('utf8');
-		for (var replaceVar in replacements) {
+		let fileText = fs.readFileSync(src).toString('utf8');
+		for (let replaceVar in replacements) {
 			fileText = fileText.replace(new RegExp(replaceVar, 'g'), replacements[replaceVar]);
 		}
 		fs.writeFileSync(dest, fileText);
@@ -169,17 +171,17 @@ function copyDirectorySync(src, dest, replacements, ignore = []) {
 }
 
 function findParentFiles(dir, filename) {
-	var paths = [];
+	let paths = [];
 	do {
 		paths.push(dir);
 
-		var lastDir = dir;
+		let lastDir = dir;
 		dir = path.resolve(dir, "../");
 	} while (dir != lastDir);
 
-	var matches = [];
+	let matches = [];
 	paths.forEach(function(dir) {
-		var file = path.resolve(dir, filename);
+		let file = path.resolve(dir, filename);
 		if (fs.existsSync(file)) {
 
 			matches.push(file);
@@ -193,13 +195,13 @@ function findFirstPackageValue(dir, types, field, reverse) {
 	if (!Array.isArray(types)) {
 		types = [types];
 	}
-	var paths = findParentFiles(dir, "package.json");
+	let paths = findParentFiles(dir, "package.json");
 	if (reverse) {
 		paths.reverse();
 	}
-	for (var i = 0; i < paths.length; i++) {
-		var file = paths[i];
-		var pkg = require(file);
+	for (let i = 0; i < paths.length; i++) {
+		let file = paths[i];
+		let pkg = require(file);
 		if (pkg && pkg.config && pkg.config.leo && (types.length === 0 || types.indexOf(pkg.config.leo.type) !== -1)) {
 			return pkg.config.leo[field] || pkg[field];
 		}

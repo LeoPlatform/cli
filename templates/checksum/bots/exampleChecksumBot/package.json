@@ -1,0 +1,35 @@
+{
+	"name": "ExampleChecksum",
+	"version": "1.0.0",
+	"description": "Checksum for the Example Orders table",
+	"main": "index.js",
+	"directories": {
+		"test": "test"
+	},
+	"scripts": {
+		"test": "leo-cli test . "
+	},
+	"config": {
+		"leo": {
+			"type": "cron",
+			"memory": 256,
+			"timeout": 300,
+			"role": "ApiRole",
+			"env": {
+				"mysql_lambda": {
+					"Fn::Sub": "${MysqlConnector}"
+				},
+				"postgres_lambda": {
+					"Fn::Sub": "${PostgresConnector}"
+				}
+			},
+			"cron": {
+				"settings": {
+					"source": "system:mysqlConnector",
+					"destination": "OrderChanges",
+				}
+			},
+			"time": "0 0 0 * * * "
+		}
+	}
+}
