@@ -1,7 +1,7 @@
 {
-	"name": "PostgresConnector",
-	"version": "1.0.0",
-	"description": "Postgres connector",
+	"name": "__CONNECTOR_TYPE__Connector",
+	"version": "1.0.1",
+	"description": "__CONNECTOR_TYPE__ Checksum connector",
 	"main": "index.js",
 	"directories": {
 		"test": "test"

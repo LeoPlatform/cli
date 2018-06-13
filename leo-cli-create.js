@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const program = require('commander');
 const colors = require('colors');
+const utils = require('./lib/utils');
 
 program
 	.version('0.0.2')
@@ -14,14 +15,15 @@ program
 		let pkgname = null;
 		let declaredType = type = type.toLowerCase();
 
-		let parentType = findFirstPackageValue(process.cwd(), [], "type");
-		let parentName = findFirstPackageValue(process.cwd(), [], "name");
+		let parentType = utils.findFirstPackageValue(process.cwd(), [], "type");
+		let parentName = utils.findFirstPackageValue(process.cwd(), [], "name");
 		if (!parentName) {
 			parentName = '';
 		}
 
 		let roots = {
 			bot: path.normalize("bots/"),
+			checksum: path.normalize("bots/"),
 			load: path.normalize("bots/"),
 			enrich: path.normalize("bots/"),
 			offload: path.normalize("bots/"),
@@ -101,14 +103,11 @@ program
 			let setupContext = await setup.inquire(utils);
 
 			switch (type) {
-				case 'checksum':
-				// case 'domainobject': // coming soon
-				// case 'elasticsearch': // coming soon
 				case 'quickstart':
 				case 'microservice':
 				case 'react':
 				case 'system':
-					copyDirectorySync(__dirname + "/templates/" + type, prefix + dir, {
+					utils.copyDirectorySync(__dirname + "/templates/" + type, prefix + dir, {
 						'____DIRPATH____': parentName + "-" + dir.replace(/\s+/g, '_'),
 						'____DIRNAME____': dir.replace(/[^a-zA-Z0-9]+/g, '_')
 					}, [
@@ -117,13 +116,31 @@ program
 					]);
 				break;
 
+				case 'checksum':
+				case 'domainobject': // coming soon
+				case 'elasticsearch': // coming soon
+					if (parentType != "microservice" && parentType != "system") {
+						console.log(`Type ${type} must be within a system or microservice package`);
+						process.exit(1);
+					}
+
+					// setup variables needed to copy files
+					setupContext.type = type;
+					setupContext.prefix = prefix;
+					setupContext.dir = dir;
+					setupContext.parentName = parentName;
+					setupContext.declaredType = declaredType;
+
+					await setup.process(utils, setupContext);
+				break;
+
 				default:
 					if (parentType != "microservice" && parentType != "system") {
 						console.log(`Type ${type} must be within a system or microservice package`);
 						process.exit(1);
 					}
 					templatePath = templatePath || `${__dirname}/templates/${type}`;
-					copyDirectorySync(templatePath, prefix + dir, {
+					utils.copyDirectorySync(templatePath, prefix + dir, {
 						'____DIRPATH____': parentName + "-" + dir.replace(/[^a-zA-Z0-9]+/g, '_'),
 						'____DIRNAME____': dir.replace(/[^a-zA-Z0-9]+/g, '_'),
 						'____BOTNAME____': parentName + "-" + dir.replace(/[^a-zA-Z0-9]+/g, '_'),
@@ -147,64 +164,4 @@ program
 
 if (!process.argv.slice(2).length) {
 	program.outputHelp(colors.red);
-}
-
-function copyDirectorySync(src, dest, replacements, ignore = []) {
-	for (let i = 0; i < ignore.length; i++) {
-		if (src.match(ignore[i])) {
-			return;
-		}
-	}
-	let stats = fs.statSync(src);
-	if (stats.isDirectory()) {
-		fs.mkdirSync(dest);
-		fs.readdirSync(src).forEach(function(entry) {
-			copyDirectorySync(path.join(src, entry), path.join(dest, entry), replacements, ignore);
-		});
-	} else {
-		let fileText = fs.readFileSync(src).toString('utf8');
-		for (let replaceVar in replacements) {
-			fileText = fileText.replace(new RegExp(replaceVar, 'g'), replacements[replaceVar]);
-		}
-		fs.writeFileSync(dest, fileText);
-	}
-}
-
-function findParentFiles(dir, filename) {
-	let paths = [];
-	do {
-		paths.push(dir);
-
-		let lastDir = dir;
-		dir = path.resolve(dir, "../");
-	} while (dir != lastDir);
-
-	let matches = [];
-	paths.forEach(function(dir) {
-		let file = path.resolve(dir, filename);
-		if (fs.existsSync(file)) {
-
-			matches.push(file);
-		}
-	});
-
-	return matches;
-}
-
-function findFirstPackageValue(dir, types, field, reverse) {
-	if (!Array.isArray(types)) {
-		types = [types];
-	}
-	let paths = findParentFiles(dir, "package.json");
-	if (reverse) {
-		paths.reverse();
-	}
-	for (let i = 0; i < paths.length; i++) {
-		let file = paths[i];
-		let pkg = require(file);
-		if (pkg && pkg.config && pkg.config.leo && (types.length === 0 || types.indexOf(pkg.config.leo.type) !== -1)) {
-			return pkg.config.leo[field] || pkg[field];
-		}
-	}
-	return null;
 }

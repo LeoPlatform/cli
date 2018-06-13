@@ -1,8 +1,8 @@
 "use strict";
 
+const connector = require('leo-connector-__CONNECTOR_TYPE__');
 const config = require('leo-config');
-const connector = require('leo-connector-mysql');
 
 module.exports = connector.checksum(async () => {
-	return await config.mysql;
+	return await config.__CONNECTOR_TYPE__;
 });

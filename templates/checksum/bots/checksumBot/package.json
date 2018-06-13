@@ -1,7 +1,7 @@
 {
-	"name": "ExampleChecksum",
+	"name": "____BOTNAME____",
 	"version": "1.0.0",
-	"description": "Checksum for the Example Orders table",
+	"description": "____BOTNAME____",
 	"main": "index.js",
 	"directories": {
 		"test": "test"
@@ -16,17 +16,17 @@
 			"timeout": 300,
 			"role": "ApiRole",
 			"env": {
-				"mysql_lambda": {
-					"Fn::Sub": "${MysqlConnector}"
+				"__MASTER_CONNECTOR_TYPE___lambda": {
+					"Fn::Sub": "${__MASTER_CONNECTOR_NAME__}"
 				},
-				"postgres_lambda": {
-					"Fn::Sub": "${PostgresConnector}"
+				"__SLAVE_CONNECTOR_TYPE___lambda": {
+					"Fn::Sub": "${__SLAVE_CONNECTOR_NAME__}"
 				}
 			},
 			"cron": {
 				"settings": {
-					"source": "system:mysqlConnector",
-					"destination": "OrderChanges",
+					"source": "system:__MASTER_CONNECTOR_TYPE__",
+					"destination": "__BOTNAME__-Differences"
 				}
 			},
 			"time": "0 0 0 * * * "
