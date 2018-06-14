@@ -46,15 +46,15 @@ program
 	}
 	config.bootstrap(path.resolve(rootDir, "leo_config.js"))
 
-	if (!config.leopublish) {
+	if (!config.publish) {
 		console.log("YOU HAVE NOT SETUP YOUR LEOPUBLISH");
 		process.exit();
 	}
-	let publishConfig = await config.leopublish;
+	let publishConfig = await config.publish;
 	let data = await require("./lib/cloud-formation.js").createCloudFormation(rootDir, {
 		config: pkgConfig,
 		force: force,
-		targets: Object.keys(publishConfig).map(r => publishConfig[r]),
+		targets: await config.publish(process.env.NODE_ENV),
 		filter: filter,
 		alias: process.env.NODE_ENV,
 		publish: program.run || !program.build,
