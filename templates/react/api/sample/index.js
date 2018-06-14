@@ -1,4 +1,5 @@
 "use strict";
+const config = require("leo-config").bootstrap(require("../../leo_config.js"));
 var request = require("leo-auth");
 
 exports.handler = async function (event, context, callback) {

@@ -1,7 +1,9 @@
 "use strict";
+const config = require("leo-config").bootstrap(require("../../leo_config.js"));
 
 var leo = require("leo-sdk");
-exports.handler = function (event, context, callback) {
+exports.handler = function(event, context, callback) {
+	let settings = Object.assign({}, event);
 	leo.offload({
 		id: event.botId,
 		queue: event.source,
