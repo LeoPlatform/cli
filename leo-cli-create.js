@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
-var fs = require('fs');
-var path = require('path');
-var program = require('commander');
-var colors = require('colors');
+const fs = require('fs');
+const path = require('path');
+const program = require('commander');
+const colors = require('colors');
+const utils = require('./lib/utils');
 
 program
 	.version('0.0.2')
@@ -11,17 +12,18 @@ program
 	.usage('<type> [subtype] <dir> [options]')
 	.action(async function(type, subtype, dir) {
 
-		var pkgname = null;
+		let pkgname = null;
 		let declaredType = type = type.toLowerCase();
 
-		var parentType = findFirstPackageValue(process.cwd(), [], "type");
-		var parentName = findFirstPackageValue(process.cwd(), [], "name");
+		let parentType = utils.findFirstPackageValue(process.cwd(), [], "type");
+		let parentName = utils.findFirstPackageValue(process.cwd(), [], "name");
 		if (!parentName) {
 			parentName = '';
 		}
 
 		let roots = {
 			bot: path.normalize("bots/"),
+			checksum: path.normalize("bots/"),
 			load: path.normalize("bots/"),
 			enrich: path.normalize("bots/"),
 			offload: path.normalize("bots/"),
@@ -34,7 +36,7 @@ program
 		if (dirs.indexOf(type) === -1) {
 			let paths = require('module')._nodeModulePaths(process.cwd());
 			let modulePathExits = false;
-			for (var key in paths) {
+			for (let key in paths) {
 				let p = path.resolve(paths[key], `${type}/templates/${subtype}`);
 				modulePathExits = modulePathExits || fs.existsSync(path.resolve(paths[key], `${type}`));
 				if (fs.existsSync(p)) {
@@ -89,13 +91,12 @@ program
 				}
 			};
 
-
-
 			let setupFile = path.resolve(__dirname, 'templates/', type, 'setup.js');
 			let setup = {
 				inquire: () => {},
 				process: () => {}
-			}
+			};
+
 			if (fs.existsSync(setupFile)) {
 				setup = require(setupFile);
 			}
@@ -106,14 +107,32 @@ program
 				case 'microservice':
 				case 'react':
 				case 'system':
-					copyDirectorySync(__dirname + "/templates/" + type, prefix + dir, {
+					utils.copyDirectorySync(__dirname + "/templates/" + type, prefix + dir, {
 						'____DIRPATH____': parentName + "-" + dir.replace(/\s+/g, '_'),
 						'____DIRNAME____': dir.replace(/[^a-zA-Z0-9]+/g, '_')
 					}, [
 						/setup\.js$/,
 						/node_modules/
 					]);
-					break;
+				break;
+
+				case 'checksum':
+				case 'domainobject': // coming soon
+				case 'elasticsearch': // coming soon
+					if (parentType != "microservice" && parentType != "system") {
+						console.log(`Type ${type} must be within a system or microservice package`);
+						process.exit(1);
+					}
+
+					// setup variables needed to copy files
+					setupContext.type = type;
+					setupContext.prefix = prefix;
+					setupContext.dir = dir;
+					setupContext.parentName = parentName;
+					setupContext.declaredType = declaredType;
+
+					await setup.process(utils, setupContext);
+				break;
 
 				default:
 					if (parentType != "microservice" && parentType != "system") {
@@ -121,7 +140,7 @@ program
 						process.exit(1);
 					}
 					templatePath = templatePath || `${__dirname}/templates/${type}`;
-					copyDirectorySync(templatePath, prefix + dir, {
+					utils.copyDirectorySync(templatePath, prefix + dir, {
 						'____DIRPATH____': parentName + "-" + dir.replace(/[^a-zA-Z0-9]+/g, '_'),
 						'____DIRNAME____': dir.replace(/[^a-zA-Z0-9]+/g, '_'),
 						'____BOTNAME____': parentName + "-" + dir.replace(/[^a-zA-Z0-9]+/g, '_'),
@@ -130,7 +149,7 @@ program
 						/setup\.js$/,
 						/node_modules/
 					]);
-					break;
+				break;
 			}
 			await setup.process(utils, setupContext);
 
@@ -145,64 +164,4 @@ program
 
 if (!process.argv.slice(2).length) {
 	program.outputHelp(colors.red);
-}
-
-function copyDirectorySync(src, dest, replacements, ignore = []) {
-	for (var i = 0; i < ignore.length; i++) {
-		if (src.match(ignore[i])) {
-			return;
-		}
-	}
-	var stats = fs.statSync(src);
-	if (stats.isDirectory()) {
-		fs.mkdirSync(dest);
-		fs.readdirSync(src).forEach(function(entry) {
-			copyDirectorySync(path.join(src, entry), path.join(dest, entry), replacements, ignore);
-		});
-	} else {
-		var fileText = fs.readFileSync(src).toString('utf8');
-		for (var replaceVar in replacements) {
-			fileText = fileText.replace(new RegExp(replaceVar, 'g'), replacements[replaceVar]);
-		}
-		fs.writeFileSync(dest, fileText);
-	}
-}
-
-function findParentFiles(dir, filename) {
-	var paths = [];
-	do {
-		paths.push(dir);
-
-		var lastDir = dir;
-		dir = path.resolve(dir, "../");
-	} while (dir != lastDir);
-
-	var matches = [];
-	paths.forEach(function(dir) {
-		var file = path.resolve(dir, filename);
-		if (fs.existsSync(file)) {
-
-			matches.push(file);
-		}
-	});
-
-	return matches;
-}
-
-function findFirstPackageValue(dir, types, field, reverse) {
-	if (!Array.isArray(types)) {
-		types = [types];
-	}
-	var paths = findParentFiles(dir, "package.json");
-	if (reverse) {
-		paths.reverse();
-	}
-	for (var i = 0; i < paths.length; i++) {
-		var file = paths[i];
-		var pkg = require(file);
-		if (pkg && pkg.config && pkg.config.leo && (types.length === 0 || types.indexOf(pkg.config.leo.type) !== -1)) {
-			return pkg.config.leo[field] || pkg[field];
-		}
-	}
-	return null;
 }

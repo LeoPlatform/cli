@@ -1,0 +1,20 @@
+{
+	"name": "__CONNECTOR_TYPE__Connector",
+	"version": "1.0.1",
+	"description": "__CONNECTOR_TYPE__ Checksum connector",
+	"main": "index.js",
+	"directories": {
+		"test": "test"
+	},
+	"scripts": {
+		"test": "leo-cli test . "
+	},
+	"config": {
+		"leo": {
+			"type": "bot",
+			"memory": 256,
+			"timeout": 300,
+			"role": "ApiRole"
+		}
+	}
+}
