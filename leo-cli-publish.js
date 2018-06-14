@@ -33,7 +33,7 @@ program
 	process.env.NODE_ENV = process.env.LEO_ENV = env;
 	process.env.LEO_REGION = program.region;
 
-	let config = require("leo-config");
+	let config = require("./leoCliConfigure.js")(process.env.NODE_ENV);
 	var buildConfig = require("./lib/build-config").build;
 	let pkgConfig = buildConfig(rootDir);
 	console.log("BUILDING ", rootDir);
