@@ -33,7 +33,7 @@ program
 	process.env.NODE_ENV = process.env.LEO_ENV = env;
 	process.env.LEO_REGION = program.region;
 
-	let config = require("leo-config/lib/build").dynamicBuild(rootDir);
+	let config = require("leo-config");
 	var buildConfig = require("./lib/build-config").build;
 	let pkgConfig = buildConfig(rootDir);
 	console.log("BUILDING ", rootDir);
@@ -43,8 +43,9 @@ program
 		force = filter;
 		rootDir = pkgConfig._meta.microserviceDir;
 		pkgConfig = buildConfig(rootDir);
-		config = require("leo-config/lib/build").dynamicBuild(rootDir);
 	}
+	config.bootstrap(path.resolve(rootDir, "leo_config.js"))
+
 	if (!config.leopublish) {
 		console.log("YOU HAVE NOT SETUP YOUR LEOPUBLISH");
 		process.exit();
