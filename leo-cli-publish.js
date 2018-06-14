@@ -8,7 +8,7 @@ program
 	.version('0.0.1')
 	.option("-e, --env [env]", "Environment")
 	.option("--build", "Only build")
-	.option("--deploy [stack]", "Deploys the published cloudformation")
+	.option("--deploy", "Deploys the published cloudformation")
 	.option("--force [force]", "Force bots to publish")
 	.option("--filter [filter]", "Filter bots to publish")
 	.option("--public [public]", "Publish as public")
@@ -44,7 +44,6 @@ program
 		rootDir = pkgConfig._meta.microserviceDir;
 		pkgConfig = buildConfig(rootDir);
 	}
-	config.bootstrap(path.resolve(rootDir, "leo_config.js"))
 
 	if (!config.publish) {
 		console.log("YOU HAVE NOT SETUP YOUR LEOPUBLISH");
@@ -71,7 +70,7 @@ program
 		console.log("\n---------------Build Complete---------------");
 	}
 
-	if (program.run && typeof program.run === "string") {
+	if (program.run) {
 		data.forEach(publish => {
 			let url = publish.url + "cloudformation.json"
 			console.time("Update Complete");
