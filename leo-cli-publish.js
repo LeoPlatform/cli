@@ -75,7 +75,7 @@ program
 	}
 
 	if (program.run) {
-		data.forEach(async (publish) => {
+		data.forEach((publish) => {
 			let url = publish.url + "cloudformation.json"
 			console.time("Update Complete");
 			console.log(`\n---------------Creating Stack ChangeSet "${process.env.NODE_ENV} ${publish.target.stack} ${publish.region}"---------------`);
@@ -99,9 +99,11 @@ program
 				clearInterval(progress);
 				console.log("");
 				console.timeEnd("Update Complete");
+				process.exit();
 			}).catch(err => {
 				clearInterval(progress);
 				console.log(" Update Error:", err);
+				process.exit();
 			});
 		});
 	}
