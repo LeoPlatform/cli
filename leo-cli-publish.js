@@ -4,11 +4,14 @@ var path = require('path');
 var program = require('commander');
 var colors = require('colors');
 
+
 program
 	.version('0.0.1')
 	.option("-e, --env [env]", "Environment")
 	.option("--build", "Only build")
-	.option("--deploy", "Deploys the published cloudformation")
+	.option("-cs --changeset", "Only build changeset")
+	.option("-c --cloudformation", "Only build cloudformation")
+	.option("-d, --deploy [env]", "Deploys the published cloudformation")
 	.option("--force [force]", "Force bots to publish")
 	.option("--filter [filter]", "Filter bots to publish")
 	.option("--public [public]", "Publish as public")
@@ -25,7 +28,7 @@ program
 		rootDir = path.resolve(process.cwd(), dir);
 	}
 
-	let env = program.env || "dev";
+	let env = program.env || program.deploy || "dev";
 	program.run = program.run || program.deploy;
 	let filter = program.filter;
 	let force = program.force;
@@ -58,7 +61,8 @@ program
 		alias: process.env.NODE_ENV,
 		publish: program.run || !program.build,
 		tag: program.tag,
-		public: program.public || false
+		public: program.public || false,
+		cloudFormationOnly: program.cloudformation
 	});
 
 	if (program.run || !program.build) {
@@ -71,24 +75,29 @@ program
 	}
 
 	if (program.run) {
-		data.forEach(publish => {
+		data.forEach(async (publish) => {
 			let url = publish.url + "cloudformation.json"
 			console.time("Update Complete");
-			console.log(`\n---------------Updating stack "${publish.target.stack} ${publish.region}"---------------`);
+			console.log(`\n---------------Creating Stack ChangeSet "${process.env.NODE_ENV} ${publish.target.stack} ${publish.region}"---------------`);
 			console.log(`url: ${url}`);
 			let progress = setInterval(() => {
 				process.stdout.write(".")
 			}, 2000);
-			publish.target.leoaws.cloudformation.run(publish.target.stack, url, {
-				Parameters: Object.keys(publish.cloudFormation.Parameters || {}).map(key => {
-					return {
-						ParameterKey: key,
-						UsePreviousValue: true,
-						NoEcho: publish.cloudFormation.Parameters[key].NoEcho
-					}
-				})
+
+			let Parameters = Object.keys(publish.cloudFormation.Parameters || {}).map(key => {
+				return {
+					ParameterKey: key,
+					UsePreviousValue: key !== "Environment" ? true : false,
+					ParameterValue: key === "Environment" ? process.env.NODE_ENV : undefined,
+					NoEcho: publish.cloudFormation.Parameters[key].NoEcho
+				}
+			});
+
+			publish.target.leoaws.cloudformation.runChangeSet(publish.target.stack, url, {
+				Parameters: Parameters
 			}).then(data => {
 				clearInterval(progress);
+				console.log("");
 				console.timeEnd("Update Complete");
 			}).catch(err => {
 				clearInterval(progress);
