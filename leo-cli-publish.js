@@ -12,7 +12,7 @@ program
 	.option("-cs --changeset", "Only build changeset")
 	.option("-c --cloudformation", "Only build cloudformation")
 	.option("-d, --deploy [env]", "Deploys the published cloudformation")
-	.option("--force [force]", "Force bots to publish")
+	.option("-f, --force [force]", "Force bots to publish")
 	.option("--filter [filter]", "Filter bots to publish")
 	.option("--public [public]", "Publish as public")
 	.arguments('[directory] [options]')
