@@ -87,10 +87,10 @@ program
 			}, 2000);
 
 			let Parameters = [{
-				ParameterKey: 'Enviornment',
+				ParameterKey: 'Environment',
 				ParameterValue: process.env.NODE_ENV
 			}].concat(Object.keys(devConfig.Parameters || {}).map(key => {
-				let value = devConfig.parameters[key];
+				let value = devConfig.Parameters[key];
 				let noEcho = false;
 				if (typeof value.NoEcho !== 'undefined') {
 					noEcho = value.NoEcho;
