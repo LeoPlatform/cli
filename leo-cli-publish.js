@@ -56,7 +56,7 @@ program
 	let data = await require("./lib/cloud-formation.js").createCloudFormation(rootDir, {
 		config: pkgConfig,
 		force: force,
-		targets: await config.publish(process.env.NODE_ENV),
+		targets: config.publish,
 		filter: filter,
 		alias: process.env.NODE_ENV,
 		publish: program.run || !program.build,
