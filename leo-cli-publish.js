@@ -56,7 +56,7 @@ program
 	let data = await require("./lib/cloud-formation.js").createCloudFormation(rootDir, {
 		config: pkgConfig,
 		force: force,
-		targets: await config.publish(process.env.NODE_ENV),
+		targets: config.publish,
 		filter: filter,
 		alias: process.env.NODE_ENV,
 		publish: program.run || !program.build,
@@ -76,6 +76,8 @@ program
 
 	if (program.run) {
 		data.forEach((publish) => {
+			let devConfig = config.deploy[process.env.NODE_ENV];
+
 			let url = publish.url + "cloudformation.json"
 			console.time("Update Complete");
 			console.log(`\n---------------Creating Stack ChangeSet "${process.env.NODE_ENV} ${publish.target.stack} ${publish.region}"---------------`);
@@ -84,16 +86,24 @@ program
 				process.stdout.write(".")
 			}, 2000);
 
-			let Parameters = Object.keys(publish.cloudFormation.Parameters || {}).map(key => {
+			let Parameters = [{
+				ParameterKey: 'Environment',
+				ParameterValue: process.env.NODE_ENV
+			}].concat(Object.keys(devConfig.Parameters || {}).map(key => {
+				let value = devConfig.Parameters[key];
+				let noEcho = false;
+				if (typeof value.NoEcho !== 'undefined') {
+					noEcho = value.NoEcho;
+					value = value.value;
+				}
 				return {
 					ParameterKey: key,
-					UsePreviousValue: key !== "Environment" ? true : false,
-					ParameterValue: key === "Environment" ? process.env.NODE_ENV : undefined,
-					NoEcho: publish.cloudFormation.Parameters[key].NoEcho
+					ParameterValue: value,
+					NoEcho: noEcho
 				}
-			});
+			}));
 
-			publish.target.leoaws.cloudformation.runChangeSet(publish.target.stack, url, {
+			publish.target.leoaws.cloudformation.runChangeSet(config.deploy[process.env.NODE_ENV].stack, url, {
 				Parameters: Parameters
 			}).then(data => {
 				clearInterval(progress);
