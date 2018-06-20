@@ -48,15 +48,16 @@ program
 		pkgConfig = buildConfig(rootDir);
 	}
 
-	if (!config.publish) {
+	let publishConfig = config.publish;
+	if (!publishConfig) {
 		console.log("YOU HAVE NOT SETUP YOUR LEOPUBLISH");
 		process.exit();
 	}
-	let publishConfig = await config.publish;
 	let data = await require("./lib/cloud-formation.js").createCloudFormation(rootDir, {
+		linkedStacks: config.linkedStacks,
 		config: pkgConfig,
 		force: force,
-		targets: config.publish,
+		targets: publishConfig,
 		filter: filter,
 		alias: process.env.NODE_ENV,
 		publish: program.run || !program.build,
@@ -89,8 +90,8 @@ program
 			let Parameters = [{
 				ParameterKey: 'Environment',
 				ParameterValue: process.env.NODE_ENV
-			}].concat(Object.keys(devConfig.Parameters || {}).map(key => {
-				let value = devConfig.Parameters[key];
+			}].concat(Object.keys(devConfig.parameters || {}).map(key => {
+				let value = devConfig.parameters[key];
 				let noEcho = false;
 				if (typeof value.NoEcho !== 'undefined') {
 					noEcho = value.NoEcho;
