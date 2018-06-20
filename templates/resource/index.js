@@ -1,11 +1,8 @@
 "use strict";
-const config = require("leo-config").bootstrap(require("../../leo_config.js"));
+const leoaws = require("leo-aws");
 var request = require("leo-auth");
 
-
-
 exports.handler = async function(event, context, callback) {
-	let leoaws = await config.leoaws;
 	let dynamodb = leoaws.dynamodb;
 
 	let user = await request.getUser(event);

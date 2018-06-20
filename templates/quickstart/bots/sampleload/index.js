@@ -1,6 +1,4 @@
 "use strict";
-const config = require("leo-config").bootstrap(require("../../leo_config.js"));
-
 let leo = require("leo-sdk");
 
 exports.handler = async function(event, context, callback) {
