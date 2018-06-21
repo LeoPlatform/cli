@@ -21,7 +21,7 @@
 				}
 			},
 			"cron": {
-				"time": "0 */1 * * * * "
+				"triggers": ["quickstart_enriched_numbers"]
 			}
 		}
 	}
