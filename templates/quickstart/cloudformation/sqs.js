@@ -47,6 +47,50 @@ module.exports = {
 					"Ref": "AlarmTopic"
 				}]
 			}
+		},
+		"QueueWriterRole": {
+			"Type": "AWS::IAM::Role",
+			"Properties": {
+				"AssumeRolePolicyDocument": {
+					"Version": "2012-10-17",
+					"Statement": [{
+						"Effect": "Allow",
+						"Principal": {
+							"Service": [
+								"lambda.amazonaws.com"
+							],
+							"AWS": {
+								"Fn::Sub": "arn:aws:iam::${AWS::AccountId}:root"
+							}
+						},
+						"Action": [
+							"sts:AssumeRole"
+						]
+					}]
+				},
+				"ManagedPolicyArns": [
+					"arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole", {
+						"Fn::ImportValue": {
+							"Fn::Sub": "${leosdk}-Policy"
+						}
+					}
+				],
+				"Policies": [{
+					"PolicyName": "BasicPolicy",
+					"PolicyDocument": {
+						"Version": "2012-10-17",
+						"Statement": [{
+							"Effect": "Allow",
+							"Action": [
+								"sqs:*"
+							],
+							"Resource": {
+								"Fn::GetAtt": ["MyQueue", "Arn"]
+							}
+						}]
+					}
+				}]
+			}
 		}
 	}
 };

@@ -7,10 +7,13 @@ exports.handler = require("leo-sdk/wrappers/cron.js")(async function(event, cont
 	}, event);
 
 	let stream = leo.load(context.botId, settings.destination);
-	stream.write({
-		now: Date.now(),
-		number: Math.round(Math.random() * 10000)
-	});
+	for (var i = 0; i < 10; i++) {
+		stream.write({
+			now: Date.now(),
+			number: Math.round(Math.random() * 10000)
+		});
+	}
+	console.log("sending");
 	stream.end(err => {
 		console.log("All done loading events", err);
 		callback(err);

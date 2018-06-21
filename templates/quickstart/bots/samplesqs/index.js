@@ -12,7 +12,6 @@ exports.handler = require("leo-sdk/wrappers/cron.js")(async function(event, cont
 	leo.offload({
 			id: context.botId,
 			queue: settings.queue,
-			limit: 20,
 			batch: {
 				size: 10
 			},
@@ -21,7 +20,7 @@ exports.handler = require("leo-sdk/wrappers/cron.js")(async function(event, cont
 				Entries: payloads.map((obj, i) => {
 					return {
 						Id: i.toString(),
-						MessageBody: obj.payload.now,
+						MessageBody: `Message sent at ${obj.payload.now}`,
 						MessageAttributes: {
 							'Bot_ID': {
 								DataType: 'String',
@@ -29,7 +28,7 @@ exports.handler = require("leo-sdk/wrappers/cron.js")(async function(event, cont
 							},
 							'random_number': {
 								DataType: 'String',
-								StringValue: obj.payload.enrichedNow
+								StringValue: obj.payload.enrichedNow.toString()
 							}
 						}
 					};

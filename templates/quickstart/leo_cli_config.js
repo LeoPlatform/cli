@@ -1,5 +1,6 @@
 'use strict';
 module.exports = {
+	linkedStacks: ['leosdk'],
 	publish: [{
 			leoaws: {
 				profile: 'default',
@@ -18,9 +19,10 @@ module.exports = {
 	],
 	deploy: {
 		dev: {
-			stack: 'devLeoTemplateCache',
+			stack: 'devSample',
 			parameters: {
-				AlarmEmail: YOUR_EMAIL_HERE
+				AlarmEmail: YOUR_EMAIL_HERE,
+				leosdk: 'DevBus'
 			}
 		}
 	},
