@@ -23,8 +23,11 @@ program
 
 		var buildConfig = require("./lib/build-config").build;
 
+		let c = buildConfig(rootDir);
 		if (pkg.config && pkg.config.leo && pkg.config.leo.type == "microservice") {
-			let c = buildConfig(rootDir);
+			process.env.leo_config_bootstrap_path = path.resolve(c._meta.microserviceDir, "leo_config.js");
+			process.env.NODE_ENV = program.env || "dev";
+			process.env.LEO_LOCAL = "true";
 			reactRunner(rootDir, c, c);
 		} else {
 			let child = null;
@@ -34,10 +37,13 @@ program
 					child = fork(__dirname + "/lib/runner.js", process.argv, {
 						cwd: rootDir,
 						env: Object.assign({}, process.env, {
+							NODE_ENV: program.env || "dev",
+							LEO_LOCAL: "true",
 							LEO_ENV: program.env || "dev",
 							LEO_REGION: program.region,
-							LEO_CONFIG: JSON.stringify(buildConfig(rootDir)),
-							LEO_PREVENT_RUN_AGAIN: "true"
+							LEO_CONFIG: JSON.stringify(c),
+							LEO_PREVENT_RUN_AGAIN: "true",
+							leo_config_bootstrap_path: path.resolve(c._meta.microserviceDir, "leo_config.js")
 						}),
 						//execArgv: ["--inspect", "--debug-brk"]
 					});
@@ -65,7 +71,6 @@ program
 
 			run();
 			let watchDirs = (watchDir ? [watchDir] : []).concat(pkg.config.test ? pkg.config.test.watch : []);
-			console.log(watchDirs);
 			var watcher = watch(watchDirs, {
 				recursive: true,
 				filter: (f) => {

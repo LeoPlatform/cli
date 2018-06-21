@@ -1,0 +1,26 @@
+{
+	"name": "list",
+	"version": "1.0.0",
+	"description": "This is a sample ApiGateway Description",
+	"main": "index.js",
+	"directories": {
+		"test": "test"
+	},
+	"scripts": {
+		"test": "mocha --recursive -w "
+	},
+	"config": {
+		"leo": {
+			"type": "resource",
+			"uri": "GET:/api/list",
+			"name": "leo_react_template_list",
+			"handler": "handler",
+			"role": null,
+			"memory": 128,
+			"timeout": 3
+		}
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC"
+}

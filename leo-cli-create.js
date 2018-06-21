@@ -1,35 +1,42 @@
 #!/usr/bin/env node
 
-var fs = require('fs');
-var path = require('path');
-var program = require('commander');
-var colors = require('colors');
+const fs = require('fs');
+const path = require('path');
+const program = require('commander');
+const colors = require('colors');
+const utils = require('./lib/utils');
 
 program
 	.version('0.0.2')
 	.arguments('<type> <subtype> [dir] ')
 	.usage('<type> [subtype] <dir> [options]')
-	.action(function(type, subtype, dir) {
-		var pkgname = null;
+	.action(async function(type, subtype, dir) {
+
+		let pkgname = null;
 		let declaredType = type = type.toLowerCase();
 
-
-		var parentType = findFirstPackageValue(process.cwd(), [], "type");
-		var parentName = findFirstPackageValue(process.cwd(), [], "name");
+		let parentType = utils.findFirstPackageValue(process.cwd(), [], "type");
+		let parentName = utils.findFirstPackageValue(process.cwd(), [], "name");
+		if (!parentName) {
+			parentName = '';
+		}
 
 		let roots = {
 			bot: path.normalize("bots/"),
+			checksum: path.normalize("bots/"),
 			load: path.normalize("bots/"),
 			enrich: path.normalize("bots/"),
 			offload: path.normalize("bots/"),
-			resource: path.normalize("apis/"),
+			resource: path.normalize("api/"),
 		};
 		let templatePath = null;
 
-		if (['system', 'microservice', 'resource', 'load', 'enrich', 'offload'].indexOf(type) === -1) {
+		let dirs = fs.readdirSync(path.resolve(__dirname, "./templates"));
+
+		if (dirs.indexOf(type) === -1) {
 			let paths = require('module')._nodeModulePaths(process.cwd());
 			let modulePathExits = false;
-			for (var key in paths) {
+			for (let key in paths) {
 				let p = path.resolve(paths[key], `${type}/templates/${subtype}`);
 				modulePathExits = modulePathExits || fs.existsSync(path.resolve(paths[key], `${type}`));
 				if (fs.existsSync(p)) {
@@ -47,8 +54,9 @@ program
 			} else if (!templatePath) {
 				dir = subtype;
 				subtype = undefined;
+				console.log(`Unable to find template '${type}'`);
+				process.exit(1);
 			}
-			type = "bot";
 		} else {
 			dir = subtype;
 			subtype = undefined;
@@ -63,37 +71,104 @@ program
 			fs.mkdirSync(prefix);
 		}
 
-
 		if (!fs.existsSync(prefix + dir)) {
-			if (type == "microservice") {
+			let sUtils = Object.assign({
+				createLeoConfig: require("./lib/createLeoConfig.js"),
+				createLeoEnvironments: require('./lib/createLeoEnvironments.js'),
+				raw: function(value) {
+					if (typeof value === "object") {
+						return `_raw:${JSON.stringify(value)}`
+					}
+					return `_raw:${value}:raw_`;
+				},
+				storeFile: function(filename, template) {
+					let file = `'use strict';\nmodule.exports = ${JSON.stringify(template, null, 2)}`;
+					file = file.replace(/"_raw:(.*):raw_"/gm, "$1")
+						.replace(/\\n/g, "\n")
+						.replace(/\\t/g, "\t")
+						.replace(/^(\s*)"([^ -]*)":/gm, "$1$2:");
+					fs.writeFileSync(path.resolve(prefix + dir, filename), file);
+				},
+				npmInstall: function(cwd) {
+					if (!cwd) {
+						cwd = path.resolve(prefix + dir);
+					} else {
+						cwd = path.resolve(cwd);
+					}
+					console.log(`------ Running NPM Install on "${cwd}" ------`);
+					require('child_process').execSync("npm install", {
+						cwd: cwd
+					});
+				},
+				name: dir.replace(/[^a-zA-Z0-9]+/g, '_')
+			}, utils);
 
-				if (parentType != "system") {
-					console.log(`Type ${type} must be within a system package`);
-					process.exit(1);
-				}
+			let setupFile = path.resolve(__dirname, 'templates/', type, 'setup.js');
+			let setup = {
+				inquire: () => {},
+				process: () => {}
+			};
 
-				copyDirectorySync(__dirname + "/templates/microservice", prefix + dir, {
-					'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_')
-				});
-			} else if (type == "system") {
-				copyDirectorySync(__dirname + "/templates/system", prefix + dir, {
-					'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_')
-				});
-			} else {
-				if (parentType != "microservice" && parentType != "system") {
-					console.log(`Type ${type} must be within a system or microservice package`);
-					process.exit(1);
-				}
-				templatePath = templatePath || `${__dirname}/templates/${type}`;
-				copyDirectorySync(templatePath, prefix + dir, {
-					'____DIRNAME____': parentName + "-" + dir.replace(/\s+/g, '_'),
-					'____BOTNAME____': parentName + "-" + dir.replace(/\s+/g, '_'),
-					'____BOTTYPE____': declaredType
-				});
+			if (fs.existsSync(setupFile)) {
+				setup = require(setupFile);
 			}
-			process.chdir(prefix + dir);
-			console.log(`Finished creating '${dir}'`);
+			let setupContext = await setup.inquire(sUtils);
 
+			switch (type) {
+				case 'quickstart':
+				case 'microservice':
+				case 'react':
+				case 'system':
+					utils.copyDirectorySync(__dirname + "/templates/" + type, prefix + dir, {
+						'____DIRPATH____': parentName + "-" + dir.replace(/\s+/g, '_'),
+						'____DIRNAME____': dir.replace(/[^a-zA-Z0-9]+/g, '_')
+					}, [
+						/setup\.js$/,
+						new RegExp(`${__dirname}/templates/${type}.*node_modules`)
+					]);
+					break;
+
+				case 'checksum':
+				case 'domainobject': // coming soon
+				case 'elasticsearch': // coming soon
+					if (parentType != "microservice" && parentType != "system") {
+						console.log(`Type ${type} must be within a system or microservice package`);
+						process.exit(1);
+					}
+
+					// setup variables needed to copy files
+					setupContext.type = type;
+					setupContext.prefix = prefix;
+					setupContext.dir = dir;
+					setupContext.parentName = parentName;
+					setupContext.declaredType = declaredType;
+
+					await setup.process(sUtils, setupContext);
+					break;
+
+				default:
+					if (parentType != "microservice" && parentType != "system") {
+						console.log(`Type ${type} must be within a system or microservice package`);
+						process.exit(1);
+					}
+					templatePath = templatePath || `${__dirname}/templates/${type}`;
+					utils.copyDirectorySync(templatePath, prefix + dir, {
+						'____DIRPATH____': parentName + "-" + dir.replace(/[^a-zA-Z0-9]+/g, '_'),
+						'____DIRNAME____': dir.replace(/[^a-zA-Z0-9]+/g, '_'),
+						'____BOTNAME____': parentName + "-" + dir.replace(/[^a-zA-Z0-9]+/g, '_'),
+						'____BOTTYPE____': declaredType
+					}, [
+						/setup\.js$/,
+						new RegExp(`${templatePath}.*node_modules`)
+					]);
+					break;
+			}
+			await setup.process(sUtils, setupContext);
+
+			sUtils.npmInstall();
+
+			console.log(`OK: Finished creating '${dir}'`);
+			process.exit();
 		} else {
 			console.log("Directory already exists");
 		}
@@ -102,60 +177,4 @@ program
 
 if (!process.argv.slice(2).length) {
 	program.outputHelp(colors.red);
-}
-
-function copyDirectorySync(src, dest, replacements) {
-	var stats = fs.statSync(src);
-	if (stats.isDirectory()) {
-		fs.mkdirSync(dest);
-		fs.readdirSync(src).forEach(function(entry) {
-			copyDirectorySync(path.join(src, entry), path.join(dest, entry), replacements);
-		});
-	} else {
-		var fileText = fs.readFileSync(src).toString('utf8');
-		for (var replaceVar in replacements) {
-			fileText = fileText.replace(new RegExp(replaceVar, 'g'), replacements[replaceVar]);
-		}
-
-		fs.writeFileSync(dest, fileText);
-	}
-}
-
-function findParentFiles(dir, filename) {
-	var paths = [];
-	do {
-		paths.push(dir);
-
-		var lastDir = dir;
-		dir = path.resolve(dir, "../");
-	} while (dir != lastDir);
-
-	var matches = [];
-	paths.forEach(function(dir) {
-		var file = path.resolve(dir, filename);
-		if (fs.existsSync(file)) {
-
-			matches.push(file);
-		}
-	});
-
-	return matches;
-}
-
-function findFirstPackageValue(dir, types, field, reverse) {
-	if (!Array.isArray(types)) {
-		types = [types];
-	}
-	var paths = findParentFiles(dir, "package.json");
-	if (reverse) {
-		paths.reverse();
-	}
-	for (var i = 0; i < paths.length; i++) {
-		var file = paths[i];
-		var pkg = require(file);
-		if (pkg && pkg.config && pkg.config.leo && (types.length === 0 || types.indexOf(pkg.config.leo.type) !== -1)) {
-			return pkg.config.leo[field] || pkg[field];
-		}
-	}
-	return null;
 }

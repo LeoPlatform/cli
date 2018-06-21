@@ -3,13 +3,14 @@
 	"version": "1.0.0",
 	"description": "",
 	"main": "app.js",
-	"scripts": {},
+	"scripts": {
+		"start": "leo test .",
+		"test": "mocha --require ./test/bootstrap.js --recursive -w",
+		"debug": "node-debug leo test ."
+	},
 	"config": {
 		"leo": {
-			"type": "microservice",
-			"stacks": [
-				"leosdk"
-			]
+			"type": "microservice"
 		}
 	}
 }

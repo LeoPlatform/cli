@@ -1,0 +1,6 @@
+node_modules/
+*.sublime-workspace
+.DS_Store
+*.swp
+dist
+api/**/.leobuild.js

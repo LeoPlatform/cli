@@ -1,0 +1,35 @@
+{
+	"name": "____BOTNAME____",
+	"version": "1.0.0",
+	"description": "____BOTNAME____",
+	"main": "index.js",
+	"directories": {
+		"test": "test"
+	},
+	"scripts": {
+		"test": "leo-cli test . "
+	},
+	"config": {
+		"leo": {
+			"type": "cron",
+			"memory": 256,
+			"timeout": 300,
+			"role": "ApiRole",
+			"env": {
+				"__MASTER_CONNECTOR_TYPE___lambda": {
+					"Fn::Sub": "${__MASTER_CONNECTOR_NAME__}"
+				},
+				"__SLAVE_CONNECTOR_TYPE___lambda": {
+					"Fn::Sub": "${__SLAVE_CONNECTOR_NAME__}"
+				}
+			},
+			"cron": {
+				"settings": {
+					"source": "system:__MASTER_CONNECTOR_TYPE__",
+					"destination": "__BOTNAME__-Differences"
+				}
+			},
+			"time": "0 0 0 * * * "
+		}
+	}
+}

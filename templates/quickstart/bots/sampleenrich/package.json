@@ -1,0 +1,24 @@
+{
+	"name": "____DIRNAME____-sampleenrich",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"directories": {
+		"test": "test"
+	},
+	"scripts": {
+		"test": "leo-cli test . "
+	},
+	"config": {
+		"leo": {
+			"type": "cron",
+			"memory": 128,
+			"timeout": 300,
+			"role": "ApiRole",
+			"env": {},
+			"cron": {
+				"triggers": ["____DIRNAME_____random_numbers"]
+			}
+		}
+	}
+}

@@ -1,0 +1,22 @@
+{
+	"name": "checksum",
+	"version": "1.0.0",
+	"description": "",
+	"main": "app.js",
+	"scripts": {},
+	"config": {
+		"leo": {
+			"type": "microservice",
+			"stacks": [
+				"leosdk"
+			]
+		}
+	},
+	"dependencies": {
+		"leo-config": ">=1.0.0",
+		"leo-sdk": ">=1.0.0",
+		"leo-connector-common": ">=1.0.0",
+		"leo-connector-mysql": ">=1.0.0",
+		"leo-connector-postgres": ">=1.0.0"
+	}
+}

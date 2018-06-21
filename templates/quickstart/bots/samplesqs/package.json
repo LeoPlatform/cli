@@ -1,0 +1,28 @@
+{
+	"name": "____DIRNAME____-samplesqs",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"directories": {
+		"test": "test"
+	},
+	"scripts": {
+		"test": "leo-cli test . "
+	},
+	"config": {
+		"leo": {
+			"type": "cron",
+			"memory": 128,
+			"timeout": 10,
+			"role": "QueueWriterRole",
+			"env": {
+				"SQS_URL": {
+					"Fn::Sub": "${MyQueue}"
+				}
+			},
+			"cron": {
+				"triggers": ["____DIRNAME_____enriched_numbers"]
+			}
+		}
+	}
+}

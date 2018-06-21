@@ -1,0 +1,11 @@
+{
+  "presets": [
+    "react",
+    ["env", {
+      "targets": {
+        "node": "8.10"
+      }
+    }]
+  ],
+  "plugins": ["transform-decorators-legacy"]
+}

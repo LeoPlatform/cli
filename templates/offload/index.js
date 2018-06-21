@@ -1,7 +1,7 @@
 "use strict";
-
 var leo = require("leo-sdk");
-exports.handler = function (event, context, callback) {
+exports.handler = function(event, context, callback) {
+	let settings = Object.assign({}, event);
 	leo.offload({
 		id: event.botId,
 		queue: event.source,

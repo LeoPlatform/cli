@@ -1,7 +1,7 @@
 "use strict";
-
 var leo = require("leo-sdk");
-exports.handler = function (event, context, callback) {
+exports.handler = function(event, context, callback) {
+	let settings = Object.assign({}, event);
 	leo.enrich({
 		id: event.botId,
 		inQueue: event.source,
