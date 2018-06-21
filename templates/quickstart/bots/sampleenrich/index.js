@@ -1,21 +1,21 @@
 "use strict";
 let leo = require("leo-sdk");
 
-exports.handler = async function(event, context, callback) {
-	let settings = Object.assign({}, event);
+exports.handler = require("leo-sdk/wrappers/cron.js")(async function(event, context, callback) {
+	let settings = Object.assign({
+		source: "quickstart_random_numbers",
+		destination: "quickstart_enriched_numbers"
+	}, event);
 	leo.enrich({
-		id: event.botId,
-		inQueue: event.source,
-		outQueue: event.destination,
-		each: (payload, meta, done) => {
-			// Enrich the event
-			done(null, Object.assign({
-				enriched: true,
-				enrichedNow: Date.now()
-			}, payload));
-		}
+		id: context.botId,
+		inQueue: settings.source,
+		outQueue: settings.destination,
+		each: (payload) => Object.assign({
+			enriched: true,
+			enrichedNow: Date.now()
+		}, payload)
 	}, (err) => {
 		console.log("All done processing events", err);
 		callback(err);
 	});
-}
+});

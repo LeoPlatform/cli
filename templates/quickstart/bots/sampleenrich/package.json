@@ -17,10 +17,7 @@
 			"role": "ApiRole",
 			"env": {},
 			"cron": {
-				"settings": {
-					"source": "quickstart_random_numbers",
-					"destination": "quickstart_enriched_numbers"
-				}
+				"triggers": ["quickstart_random_numbers"]
 			}
 		}
 	}

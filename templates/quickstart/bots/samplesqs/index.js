@@ -1,11 +1,11 @@
+const config = require("leo-config");
 const leo = require('leo-sdk');
 const leoaws = require("leo-aws");
 
-
 exports.handler = require("leo-sdk/wrappers/cron.js")(async function(event, context, callback) {
 	let settings = Object.assign({
-		queue: "Order",
-		destination: "https://sqs.us-west-2.amazonaws.com/134898387190/test"
+		queue: "quickstart_enriched_numbers",
+		destination: config.sqs
 	}, event);
 
 	// read events from a queue
@@ -21,7 +21,7 @@ exports.handler = require("leo-sdk/wrappers/cron.js")(async function(event, cont
 				Entries: payloads.map((obj, i) => {
 					return {
 						Id: i.toString(),
-						MessageBody: obj.payload.op, // obj.payload.enriched_event.data,
+						MessageBody: obj.payload.now,
 						MessageAttributes: {
 							'Bot_ID': {
 								DataType: 'String',
@@ -29,7 +29,7 @@ exports.handler = require("leo-sdk/wrappers/cron.js")(async function(event, cont
 							},
 							'random_number': {
 								DataType: 'String',
-								StringValue: obj.payload.op, //payload.enrichedNow
+								StringValue: obj.payload.enrichedNow
 							}
 						}
 					};
