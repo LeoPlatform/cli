@@ -75,8 +75,19 @@ program
 			let sUtils = Object.assign({
 				createLeoConfig: require("./lib/createLeoConfig.js"),
 				createLeoEnvironments: require('./lib/createLeoEnvironments.js'),
-				storeLeoConfigJS: function(template) {
-					fs.writeFileSync(path.resolve(prefix + dir, "leo_config.js"), template);
+				raw: function(value) {
+					if (typeof value === "object") {
+						return `_raw:${JSON.stringify(value)}`
+					}
+					return `_raw:${value}:raw_`;
+				},
+				storeFile: function(filename, template) {
+					let file = `'use strict';\nmodule.exports = ${JSON.stringify(template, null, 2)}`;
+					file = file.replace(/"_raw:(.*):raw_"/gm, "$1")
+						.replace(/\\n/g, "\n")
+						.replace(/\\t/g, "\t")
+						.replace(/^(\s*)"([^ -]*)":/gm, "$1$2:");
+					fs.writeFileSync(path.resolve(prefix + dir, filename), file);
 				},
 				npmInstall: function(cwd) {
 					if (!cwd) {
@@ -88,7 +99,8 @@ program
 					require('child_process').execSync("npm install", {
 						cwd: cwd
 					});
-				}
+				},
+				name: dir.replace(/[^a-zA-Z0-9]+/g, '_')
 			}, utils);
 
 			let setupFile = path.resolve(__dirname, 'templates/', type, 'setup.js');
