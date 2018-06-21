@@ -3,7 +3,7 @@ const utils = require('./../../lib/utils');
 const fs = require('fs');
 const path = require('path');
 
-let prompt = require("prompt-sync")();
+let prompt = require("../../lib/prompt");
 let availableOptions = ['mysql', 'postgres', 'sqlserver', 'custom'];
 let dbTypes = ['mysql', 'postgres', 'sqlserver'];
 module.exports = {
@@ -13,10 +13,10 @@ module.exports = {
 			console.log(`  ° ${option}`);
 		}
 
-		let master = promptDefault('What is your master data system?', 'mysql');
-		let masterDestination = dbTypes.indexOf(master) !== '-1' && promptDefault('What name would you like for the master connector? (If this connector does not exist, it will be created)', master + 'Connector');
-		let slave = promptDefault('What is your slave data system?', 'postgres');
-		let slaveDestination = dbTypes.indexOf(slave) !== '-1' && promptDefault('What name would you like for the slave connector? (If this connector does not exist, it will be created)', slave + 'Connector');
+		let master = await prompt('What is your master data system?', 'mysql');
+		let masterDestination = dbTypes.indexOf(master) !== '-1' && await prompt('What name would you like for the master connector? (If this connector does not exist, it will be created)', master + 'Connector');
+		let slave = await prompt('What is your slave data system?', 'postgres');
+		let slaveDestination = dbTypes.indexOf(slave) !== '-1' && await prompt('What name would you like for the slave connector? (If this connector does not exist, it will be created)', slave + 'Connector');
 
 		return {
 			master: master,
@@ -42,14 +42,6 @@ module.exports = {
 	}
 };
 
-function promptDefault(p, def) {
-	let a = prompt(p + `[${def}]: `).trim();
-	if (a == "") {
-		a = def;
-	}
-	return a;
-}
-
 async function copyChecksumFiles(src, dest, dir, replacements, ignore, setupContext) {
 	let botReplacements = replacements;
 	src = src + '/bots';
@@ -61,8 +53,7 @@ async function copyChecksumFiles(src, dest, dir, replacements, ignore, setupCont
 	return Promise.resolve();
 }
 
-async function setupMaster(src, dest, replacements, botReplacements, ignore, setupContext)
-{
+async function setupMaster(src, dest, replacements, botReplacements, ignore, setupContext) {
 	let dbReplacements = {};
 	// if it's a database type that is selected, create or re-use the specified database connectors
 	if (dbTypes.indexOf(setupContext.master) !== -1) {
@@ -70,7 +61,7 @@ async function setupMaster(src, dest, replacements, botReplacements, ignore, set
 			let masterReplacements = replacements;
 
 			fs.mkdirSync(dest + '/' + setupContext.masterDestination);
-			fs.readdirSync(src + '/dbConnector').forEach(function (entry) {
+			fs.readdirSync(src + '/dbConnector').forEach(function(entry) {
 				masterReplacements['__CONNECTOR_TYPE__'] = setupContext.master;
 				utils.copyDirectorySync(path.join(src + '/dbConnector', entry), path.join(dest + '/' + setupContext.masterDestination, entry), masterReplacements, ignore);
 			});
@@ -97,8 +88,7 @@ async function setupMaster(src, dest, replacements, botReplacements, ignore, set
 	return botReplacements;
 }
 
-async function setupSlave(src, dest, replacements, botReplacements, ignore, setupContext)
-{
+async function setupSlave(src, dest, replacements, botReplacements, ignore, setupContext) {
 	let dbReplacements = {};
 	// if slave is of type database
 	if (dbTypes.indexOf(setupContext.slave) !== -1) {
@@ -106,7 +96,7 @@ async function setupSlave(src, dest, replacements, botReplacements, ignore, setu
 			let slaveReplacements = replacements;
 
 			fs.mkdirSync(dest + '/' + setupContext.slaveDestination);
-			fs.readdirSync(src + '/dbConnector').forEach(function (entry) {
+			fs.readdirSync(src + '/dbConnector').forEach(function(entry) {
 				slaveReplacements['__CONNECTOR_TYPE__'] = setupContext.slave;
 				utils.copyDirectorySync(path.join(src + '/dbConnector', entry), path.join(dest + '/' + setupContext.slaveDestination, entry), slaveReplacements, ignore);
 			});
@@ -133,8 +123,7 @@ async function setupSlave(src, dest, replacements, botReplacements, ignore, setu
 	return botReplacements;
 }
 
-async function setupChecksum(src, dest, dir, replacements, botReplacements, ignore)
-{
+async function setupChecksum(src, dest, dir, replacements, botReplacements, ignore) {
 	if (!fs.existsSync(dest + '/' + dir)) {
 
 		fs.mkdirSync(dest + '/' + dir);
