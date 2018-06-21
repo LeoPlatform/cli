@@ -11,6 +11,6 @@
 	},
 	"dependencies": {
 		"leo-config": ">=1.0.0",
-		"leo-sdk": ">=1.0.0"
+		"leo-sdk": ">=2.0.0"
 	}
 }
