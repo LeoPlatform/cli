@@ -1,5 +1,5 @@
 {
-	"name": "quickstart-sampleload",
+	"name": "quickstart-samplesqs",
 	"version": "1.0.0",
 	"description": "",
 	"main": "index.js",
@@ -15,7 +15,11 @@
 			"memory": 128,
 			"timeout": 10,
 			"role": "ApiRole",
-			"env": {},
+			"env": {
+				"SQS_URL": {
+					"Fn::Sub": "${MyQueue}"
+				}
+			},
 			"cron": {
 				"time": "0 */1 * * * * "
 			}

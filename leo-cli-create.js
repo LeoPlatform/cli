@@ -72,7 +72,7 @@ program
 		}
 
 		if (!fs.existsSync(prefix + dir)) {
-			let utils = {
+			let sUtils = Object.assign({
 				createLeoConfig: require("./lib/createLeoConfig.js"),
 				createLeoEnvironments: require('./lib/createLeoEnvironments.js'),
 				storeLeoConfigJS: function(template) {
@@ -89,7 +89,7 @@ program
 						cwd: cwd
 					});
 				}
-			};
+			}, utils);
 
 			let setupFile = path.resolve(__dirname, 'templates/', type, 'setup.js');
 			let setup = {
@@ -100,7 +100,7 @@ program
 			if (fs.existsSync(setupFile)) {
 				setup = require(setupFile);
 			}
-			let setupContext = await setup.inquire(utils);
+			let setupContext = await setup.inquire(sUtils);
 
 			switch (type) {
 				case 'quickstart':
@@ -114,7 +114,7 @@ program
 						/setup\.js$/,
 						/node_modules/
 					]);
-				break;
+					break;
 
 				case 'checksum':
 				case 'domainobject': // coming soon
@@ -131,8 +131,8 @@ program
 					setupContext.parentName = parentName;
 					setupContext.declaredType = declaredType;
 
-					await setup.process(utils, setupContext);
-				break;
+					await setup.process(sUtils, setupContext);
+					break;
 
 				default:
 					if (parentType != "microservice" && parentType != "system") {
@@ -149,13 +149,14 @@ program
 						/setup\.js$/,
 						/node_modules/
 					]);
-				break;
+					break;
 			}
-			await setup.process(utils, setupContext);
+			await setup.process(sUtils, setupContext);
 
-			utils.npmInstall();
+			sUtils.npmInstall();
 
 			console.log(`OK: Finished creating '${dir}'`);
+			process.exit();
 		} else {
 			console.log("Directory already exists");
 		}

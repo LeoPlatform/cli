@@ -42,7 +42,7 @@ module.exports = {
 				personas: {
 					default: {
 						identity: {
-							'sourceIp': '67.163.78.93'
+							"sourceIp": "127.0.0.1"
 						}
 					}
 				},

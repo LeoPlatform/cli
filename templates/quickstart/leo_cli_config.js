@@ -19,7 +19,7 @@ module.exports = {
 	deploy: {
 		dev: {
 			stack: 'devLeoTemplateCache',
-			Parameters: {
+			parameters: {
 				AlarmEmail: YOUR_EMAIL_HERE
 			}
 		}
