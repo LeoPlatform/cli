@@ -124,7 +124,7 @@ program
 						'____DIRNAME____': dir.replace(/[^a-zA-Z0-9]+/g, '_')
 					}, [
 						/setup\.js$/,
-						/node_modules/
+						new RegExp(`${__dirname}/templates/${type}.*node_modules`)
 					]);
 					break;
 
@@ -159,7 +159,7 @@ program
 						'____BOTTYPE____': declaredType
 					}, [
 						/setup\.js$/,
-						/node_modules/
+						new RegExp(`${templatePath}.*node_modules`)
 					]);
 					break;
 			}
