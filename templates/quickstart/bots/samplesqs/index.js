@@ -4,7 +4,7 @@ const leoaws = require("leo-aws");
 
 exports.handler = require("leo-sdk/wrappers/cron.js")(async function(event, context, callback) {
 	let settings = Object.assign({
-		queue: "quickstart_enriched_numbers",
+		queue: "____DIRNAME_____enriched_numbers",
 		destination: config.sqs
 	}, event);
 

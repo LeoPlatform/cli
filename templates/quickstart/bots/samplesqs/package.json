@@ -1,5 +1,5 @@
 {
-	"name": "quickstart-samplesqs",
+	"name": "____DIRNAME____-samplesqs",
 	"version": "1.0.0",
 	"description": "",
 	"main": "index.js",
@@ -21,7 +21,7 @@
 				}
 			},
 			"cron": {
-				"triggers": ["quickstart_enriched_numbers"]
+				"triggers": ["____DIRNAME_____enriched_numbers"]
 			}
 		}
 	}

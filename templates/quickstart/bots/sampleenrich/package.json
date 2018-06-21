@@ -1,5 +1,5 @@
 {
-	"name": "quickstart-sampleenrich",
+	"name": "____DIRNAME____-sampleenrich",
 	"version": "1.0.0",
 	"description": "",
 	"main": "index.js",
@@ -17,7 +17,7 @@
 			"role": "ApiRole",
 			"env": {},
 			"cron": {
-				"triggers": ["quickstart_random_numbers"]
+				"triggers": ["____DIRNAME_____random_numbers"]
 			}
 		}
 	}

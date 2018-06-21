@@ -9,7 +9,7 @@ module.exports = {
 		"MyQueue": {
 			"Type": "AWS::SQS::Queue",
 			"Properties": {
-				"QueueName": "LeoQuickStart"
+				"QueueName": "SQS_____DIRNAME____"
 			}
 		},
 		"AlarmTopic": {
@@ -71,7 +71,7 @@ module.exports = {
 				"ManagedPolicyArns": [
 					"arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole", {
 						"Fn::ImportValue": {
-							"Fn::Sub": "${leosdk}-Policy"
+							"Fn::Sub": "${LeoBus}-Policy"
 						}
 					}
 				],
