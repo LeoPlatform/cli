@@ -142,9 +142,10 @@ async function buildEvent() {
 
 	let id = process.env.BOT;
 	let lambdaName = process.env.AWS_LAMBDA_FUNCTION_NAME;
+	let entry;
 	if (!id) {
 		// Scan table for lambda name;
-		id = await new Promise((resolve, reject) => docClient.scan({
+		entry = await new Promise((resolve, reject) => docClient.scan({
 			Key: {
 				id: id
 			},
@@ -155,22 +156,25 @@ async function buildEvent() {
 			}
 		}, (err, data) => {
 			if (err) reject(err);
-			else resolve(data.Items[0].id);
+			else resolve(data.Items[0]);
 		}))
+		id = entry.id;
 	}
 	if (!lambdaName) {
 		// Lookup lambda name
-		lambdaName = await new Promise((resolve, reject) => docClient.get({
+		entry = await new Promise((resolve, reject) => docClient.get({
 			Key: {
 				id: id
 			},
 			TableName: process.env.LEO_CRON
 		}, (err, data) => {
 			if (err) reject(err);
-			else resolve(data.Item && data.Item.lambdaName);
+			else resolve(data.Item);
 		}));
+		lambdaName = entry.lambdaName;
 	}
-	return {
+
+	return Object.assign({}, entry.lambda && entry.lambda.settings && entry.lambda.settings[0] || {}, {
 		__cron: {
 			id: id,
 			name: lambdaName,
@@ -179,7 +183,7 @@ async function buildEvent() {
 			force: true
 		},
 		botId: id
-	};
+	});
 }
 
 function createContext(config) {
