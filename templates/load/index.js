@@ -1,8 +1,8 @@
 "use strict";
-var leo = require("leo-sdk");
-exports.handler = function(event, context, callback) {
+const leo = require("leo-sdk");
+exports.handler = require("leo-sdk/wrappers/cron.js")(function(event, context, callback) {
 	let settings = Object.assign({}, event);
-	var stream = leo.load(event.botId, event.destination);
+	let stream = leo.load(event.botId, event.destination);
 	stream.write({
 		now: Date.now(),
 		number: Math.round(Math.random() * 10000)
@@ -13,4 +13,4 @@ exports.handler = function(event, context, callback) {
 		callback(err);
 	});
 
-}
+});

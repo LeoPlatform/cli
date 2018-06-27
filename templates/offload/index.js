@@ -1,6 +1,6 @@
 "use strict";
-var leo = require("leo-sdk");
-exports.handler = function(event, context, callback) {
+const leo = require("leo-sdk");
+exports.handler = require("leo-sdk/wrappers/cron.js")(function (event, context, callback) {
 	let settings = Object.assign({}, event);
 	leo.offload({
 		id: event.botId,
@@ -15,4 +15,4 @@ exports.handler = function(event, context, callback) {
 		callback(err);
 	});
 
-}
+});
