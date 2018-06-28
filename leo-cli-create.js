@@ -168,6 +168,9 @@ program
 					utils.copyDirectorySync(templatePath, prefix + dir, {
 						'____DIRPATH____': parentName + "-" + name.replace(/[^a-zA-Z0-9]+/g, '_'),
 						'____DIRNAME____': name.replace(/[^a-zA-Z0-9]+/g, '_'),
+						'____DIRNAMEP____': name.replace(/[^a-zA-Z0-9]+/g, '_').replace(/(^\w|_\w)/g, function(txt) {
+							return txt.charAt(txt.length == 1 ? 0 : 1).toUpperCase();
+						}),
 						'____BOTNAME____': parentName + "-" + name.replace(/[^a-zA-Z0-9]+/g, '_'),
 						'____BOTTYPE____': declaredType
 					}, [
