@@ -13,7 +13,7 @@
 		"leo": {
 			"type": "cron",
 			"memory": 128,
-			"timeout": 10,
+			"timeout": 120,
 			"role": "QueueWriterRole",
 			"env": {
 				"SQS_URL": {
