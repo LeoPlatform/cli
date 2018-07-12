@@ -29,6 +29,8 @@ npm install leo-cli -g
 How to use the Leo CLI
 ===================================
 
+At this point, we recommend following the [Quick Start instructions](https://github.com/LeoPlatform/Leo#step-3-create-a-quickstart-project) to create a project shell with example bots.
+
 Create a System
 ---------------
 A system is the root directory for a group of microservices & bots.  This command will create a directory for the system.
@@ -85,13 +87,18 @@ Publishing a microservice will build all needed lambda functions into zip files 
 The publish command must be run from a micorservice or bot directory
 
 ```
-leo-cli publish .
+leo-cli publish
 ```
+##### Note:
+As of version 2.0.0, leo_cli_config.js and leo_config.js are required to be able to publish.
 
 options
-* **--region awsRegion**			Sets the AWS Region. default: us-west-2
+* **-e --env [environment]**        Environment.
+* **-cs --changeset**               Only build Changeset.
+* **-c**                            Only build cloudformation.
+* **-d --deploy [environment]**     Deploy the published cloudformation.
+* **-f all --force all**            Force publish and deploy of all bots, including ones without changes.
 * **--filter idGlobExp**			Filters the lambdas deployed by the given glob expression. default: *
-* **--force botId|all**				Forces a bot to build even if the versions are the same (Must be included in --filter expression). default: false
 * **--run awsStackName**			Runs the generated cloudformation.json against the AWS Stack 'awsStackName'.  If the stack doesn't exist, it will be crated
 * **--build**						Builds the cloudformation and lambdas but doesn't publish them to s3
 * **--public**						Makes the s3 publish folder public
@@ -105,7 +112,7 @@ Publish a Microservice with all new/updated bots
 
 ```
 cd /MySystem/MyService
-leo-cli publish . 
+leo-cli publish 
 ```  
 
 
@@ -113,7 +120,7 @@ Publish a Microservice and force all bots to build
 
 ```
 cd /MySystem/MyService
-leo-cli publish . --force all
+leo-cli publish --force all
 ```  
 
 
@@ -121,7 +128,7 @@ Publish a single bot in a Microservice
 
 ```
 cd /MySystem/MyService/bots/MyBot
-leo-cli publish . 
+leo-cli publish
 ```  
 
 
@@ -129,12 +136,12 @@ Publish a single bot or resource in a Microservice
 
 ```
 cd /MySystem/MyService/bots/MyBot
-leo-cli publish . 
+leo-cli publish 
 ```  
 
 ```
 cd /MySystem/MyService
-leo-cli publish . --filter MyBot
+leo-cli publish --filter MyBot
 ```  
 
 
