@@ -1,15 +1,10 @@
-#!/usr/bin/env node
+"use strict";
 
 const path = require('path');
 const program = require('commander');
-const colors = require('colors');
 
-program
-    .version('0.0.1')
-    .option("-e, --env [env]", "Environment")
-    .option("--region [region]", "Region to run cloudformation")
-    .usage('<dir> [options]')
-    .action(function (dir) {
+module.exports = {
+    debugBot: function (dir) {
         let rootDir = path.resolve(process.cwd(), dir);
         let pkg = require(path.resolve(rootDir, "package.json"));
 
@@ -28,8 +23,5 @@ program
             process.env.LEO_PREVENT_RUN_AGAIN = "true";
             require(__dirname + "/lib/runner.js");
         }
-    })
-    .parse(process.argv);
-if (!process.argv.slice(2).length) {
-    program.outputHelp(colors.red);
-}
+    }
+};
