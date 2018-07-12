@@ -91,6 +91,7 @@ leo-cli publish
 ```
 ##### Note:
 As of version 2.0.0, leo_cli_config.js and leo_config.js are required to be able to publish.
+See [leo-config](https://github.com/LeoPlatform/leo-config) for config details. Config files are automatically created as part of the Quick Start.
 
 options
 * **-e --env [environment]**        Environment.
