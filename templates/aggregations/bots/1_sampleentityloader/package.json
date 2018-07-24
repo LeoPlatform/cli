@@ -1,0 +1,31 @@
+{
+	"name": "____DIRNAME____-SampleEntityLoader",
+	"version": "1.0.0",
+	"description": "Takes data from a queue and loads into the entity table (DynamoDB)",
+	"main": "index.js",
+	"directories": {
+		"test": "test"
+	},
+	"scripts": {
+		"test": "leo-cli test . "
+	},
+	"config": {
+		"leo": {
+			"type": "cron",
+			"memory": 128,
+			"timeout": 300,
+			"role": "LeoEntitiesChangesRole",
+			"env": {
+				"entityTableName": {
+					"Fn::Sub": "${Entities}"
+				}
+			},
+			"cron": {
+				"settings": {},
+				"triggers": [
+					"____DIRNAME_____enriched_numbers"
+				]
+			}
+		}
+	}
+}

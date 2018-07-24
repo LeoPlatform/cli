@@ -7,8 +7,9 @@ exports.handler = require("leo-sdk/wrappers/cron.js")(async function(event, cont
 	}, event);
 
 	let stream = leo.load(context.botId, settings.destination);
-	for (var i = 0; i < 10; i++) {
+	for (let i = 0; i < 10; i++) {
 		stream.write({
+			id: i,
 			now: Date.now(),
 			number: Math.round(Math.random() * 10000)
 		});

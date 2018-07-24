@@ -5,6 +5,7 @@ const path = require('path');
 const program = require('commander');
 const colors = require('colors');
 const utils = require('./lib/utils');
+const merge = require('lodash.merge');
 
 program
 	.version('0.0.2')
@@ -163,9 +164,21 @@ program
 				console.log(path.resolve(templatePath, "package.json"), fs.existsSync(path.resolve(templatePath, "package.json")));
 				if (!fs.existsSync(path.resolve(templatePath, "package.json")) || !fs.existsSync(prefix + dir)) {
 					if (!name) {
-						name = dir;
+						// if we're in the current directory, we will have a “.” or “./” for a name. Find the actual name and use that instead.
+						if (dir === '.' || dir === './') {
+							let dirPath = process.cwd().split('/');
+							let lastIndex = dirPath.length - 1;
+
+							if (lastIndex < 0) {
+								throw new Error('Cannot find valid directory path');
+							}
+							name = dirPath[lastIndex];
+						} else {
+							name = dir;
+						}
 					}
-					utils.copyDirectorySync(templatePath, prefix + dir, {
+
+					utils.copyDirectorySync(templatePath, prefix + dir, merge(setupContext || {}, {
 						'____DIRPATH____': parentName + "-" + name.replace(/[^a-zA-Z0-9]+/g, '_'),
 						'____DIRNAME____': name.replace(/[^a-zA-Z0-9]+/g, '_'),
 						'____DIRNAMEP____': name.replace(/[^a-zA-Z0-9]+/g, '_').replace(/(^\w|_\w)/g, function(txt) {
@@ -173,7 +186,7 @@ program
 						}),
 						'____BOTNAME____': parentName + "-" + name.replace(/[^a-zA-Z0-9]+/g, '_'),
 						'____BOTTYPE____': declaredType
-					}, [
+					}), [
 						/setup\.js$/,
 						new RegExp(`${templatePath}.*node_modules`)
 					]);
