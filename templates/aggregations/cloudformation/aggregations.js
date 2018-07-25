@@ -38,7 +38,7 @@ module.exports = {
 					},
 					{
 						"AttributeName": "id",
-						"AttributeType": "S"
+						"AttributeType": "__entity_id_type__"
 					}
 				],
 				"KeySchema": [
@@ -66,7 +66,7 @@ module.exports = {
 				"AttributeDefinitions": [
 					{
 						"AttributeName": "id",
-						"AttributeType": "S"
+						"AttributeType": "__aggregation_id_type__"
 					},
 					{
 						"AttributeName": "bucket",

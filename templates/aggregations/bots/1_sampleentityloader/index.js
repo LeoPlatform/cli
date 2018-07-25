@@ -17,9 +17,13 @@ exports.handler = require("leo-sdk/wrappers/cron.js")((event, context, callback)
 });
 
 const payloadTransform = (payload, hash) => {
-    let hashed = hash(queueName, payload.number);
-    return Object.assign({}, payload.fullobj, {
-        id: payload.id.toString(),
+    let hashed = hash(queueName, payload.id);
+
+    // if entity type id type is string, convert the id to a string, otherwsise convert to integer
+    let id = ('__entity_id_type__' === 'S') ? payload.id.toString() : parseInt(payload.id);
+
+    return Object.assign({}, payload, {
+        id: id,
         partition: hashed
     })
 };

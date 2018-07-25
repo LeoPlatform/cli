@@ -1,11 +1,12 @@
 'use strict';
 const merge = require('lodash.merge');
 const utils = require('./../../lib/utils');
+const prompt = require('./../../lib/prompt');
 const beautify = require('js-beautify').js_beautify;
 const fs = require('fs');
 
 module.exports = {
-	inquire: function (utils) {
+	inquire: async function (utils) {
 		let dirPath = process.cwd().split('/');
 		let lastIndex = dirPath.length - 1;
 
@@ -20,11 +21,13 @@ module.exports = {
 			__bot02__: utils.properCaseTransform(dirPath[lastIndex] + '-SampleEntityChangeProcessor'),
 			__bot03__: utils.properCaseTransform(dirPath[lastIndex] + '-SampleEntityChanges'),
 			__bot04__: utils.properCaseTransform(dirPath[lastIndex] + '-SampleEntityAggregations'),
+			__entity_id_type__: 'S',//await prompt('What type would you like your ID to be in the Entities table? [S(string)|N(number)]', 'S', /^[SN]$/),
+			__aggregation_id_type__: 'S',//await prompt('What type would you like your ID to be in the Aggregations table? (S (String)|N (Number))', 'S', /^[SN]$/),
 		};
 	},
 	process: async function (utils, context) {
-		updateConfig(utils, context);
-		// updateModules(utils, context);
+		await updateConfig(utils, context);
+		await updateModules(utils, context);
 	}
 };
 
@@ -42,21 +45,9 @@ async function updateConfig(utils, context) {
 		throw new Error('Error while attempting to process setup.js. Cannot find valid directory.');
 	}
 
-	let dirname = utils.properCaseTransform(dirPath[lastIndex]);
-	context = merge(context, {
-		____DIRNAME____: dirname,
-		__bot01__: dirname + '-SampleEntityLoader',
-		__bot02__: dirname + '-SampleEntityChangeProcessor',
-		__bot03__: dirname + '-SampleEntityChanges',
-		__bot04__: dirname + '-SampleEntityAggregations',
-	});
-
-	// console.log(context);
-	// process.exit();
-
 	// add tables to leo_config.js
-	let aggregationTableName = `aggregationTableName: '${context.____DIRNAME____}Aggregations',`;
-	let entityTableName = `entityTableName: '${context.____DIRNAME____}Entities',`;
+	let aggregationTableName = 'aggregationTableName: process.env.aggregationTableName,';
+	let entityTableName = 'entityTableName: process.env.entityTableName,';
 
 	await utils.asyncReadFile(configs[0]).then(async data => {
 		let configVars = !data.match(/aggregationTableName/) && aggregationTableName;
