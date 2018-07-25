@@ -1,16 +1,17 @@
 "use strict";
 let leo = require("leo-sdk");
-process.env.LEO_LOGGER = '/.*/tide'
-exports.handler = require("leo-sdk/wrappers/cron.js")(async function(event, context, callback) {
+process.env.LEO_LOGGER = '/.*/tide';
+exports.handler = require("leo-sdk/wrappers/cron.js")(async function (event, context, callback) {
 	let settings = Object.assign({
 		destination: "____DIRNAME_____random_numbers"
 	}, event);
 
 	let stream = leo.load(context.botId, settings.destination);
-	for (var i = 0; i < 10; i++) {
+	for (let i = 1; i <= 10; i++) {
 		stream.write({
+			id: i,
 			now: Date.now(),
-			number: Math.round(Math.random() * 10000)
+			number: Math.round(Math.random() * 100)
 		});
 	}
 	console.log("sending");

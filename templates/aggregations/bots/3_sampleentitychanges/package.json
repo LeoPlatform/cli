@@ -1,0 +1,31 @@
+{
+	"name": "____DIRNAME____-SampleEntityChanges",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"directories": {
+		"test": "test"
+	},
+	"scripts": {
+		"test": "leo-cli test ."
+	},
+	"config": {
+		"leo": {
+			"type": "cron",
+			"memory": 128,
+			"timeout": 300,
+			"role": "LeoEntitiesChangesRole",
+			"env": {
+				"aggregationTableName": {
+					"Fn::Sub": "${Aggregations}"
+				}
+			},
+			"cron": {
+				"settings": {},
+				"triggers": [
+					"____DIRNAME_____enriched_numbers_changes"
+				]
+			}
+		}
+	}
+}
