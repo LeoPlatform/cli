@@ -66,7 +66,7 @@ module.exports = {
 				"AttributeDefinitions": [
 					{
 						"AttributeName": "id",
-						"AttributeType": "__aggregation_id_type__"
+						"AttributeType": "S",
 					},
 					{
 						"AttributeName": "bucket",

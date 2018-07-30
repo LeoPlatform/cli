@@ -21,8 +21,7 @@ module.exports = {
 			__bot02__: utils.properCaseTransform(dirPath[lastIndex] + '-SampleEntityChangeProcessor'),
 			__bot03__: utils.properCaseTransform(dirPath[lastIndex] + '-SampleEntityChanges'),
 			__bot04__: utils.properCaseTransform(dirPath[lastIndex] + '-SampleEntityAggregations'),
-			__entity_id_type__: 'S',//await prompt('What type would you like your ID to be in the Entities table? [S(string)|N(number)]', 'S', /^[SN]$/),
-			__aggregation_id_type__: 'S',//await prompt('What type would you like your ID to be in the Aggregations table? (S (String)|N (Number))', 'S', /^[SN]$/),
+			__entity_id_type__: await prompt('What type would you like your ID to be in the Entities table? [S(string)|N(number)]', 'S', /^[SN]$/),
 		};
 	},
 	process: async function (utils, context) {
