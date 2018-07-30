@@ -1,6 +1,6 @@
 {
     "name": "leo-cli",
-    "version": "2.1.1",
+    "version": "2.1.2",
     "description": "A Nodejs interface to interact with the Leo SDK and AWS",
     "repository": {
         "type": "git",
