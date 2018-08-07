@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 
-var path = require('path');
-var program = require('commander');
-var colors = require('colors');
-
+const path = require('path');
+const program = require('commander');
 
 program
 	.version('0.0.1')
@@ -38,7 +36,7 @@ program
 	process.env.LEO_REGION = program.region;
 
 	let config = require("./leoCliConfigure.js")(process.env.NODE_ENV);
-	var buildConfig = require("./lib/build-config").build;
+	let buildConfig = require("./lib/build-config").build;
 	let pkgConfig = buildConfig(rootDir);
 	console.log("BUILDING ", rootDir);
 
@@ -108,7 +106,7 @@ program
 
 			publish.target.leoaws.cloudformation.runChangeSet(config.deploy[process.env.NODE_ENV].stack, url, {
 				Parameters: Parameters
-			}).then(data => {
+			}).then(() => {
 				clearInterval(progress);
 				console.log("");
 				console.timeEnd("Update Complete");
