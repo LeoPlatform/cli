@@ -15,6 +15,7 @@ program
 	.option("-f, --force [force]", "Force bots to publish")
 	.option("--filter [filter]", "Filter bots to publish")
 	.option("--public [public]", "Publish as public")
+	.option("-s --save [save]", "Save the cloudformation.json to the microservice directory")
 	.arguments('[directory] [options]')
 	.usage('[directory] [options]');
 
@@ -63,7 +64,8 @@ program
 		publish: program.run || !program.build,
 		tag: program.tag,
 		public: program.public || false,
-		cloudFormationOnly: program.cloudformation
+		cloudFormationOnly: program.cloudformation,
+		saveCloudFormation: program.save
 	});
 
 	if (program.run || !program.build) {
