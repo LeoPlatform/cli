@@ -5,7 +5,6 @@ var program = require('commander');
 var colors = require('colors');
 var buildConfig = require("./lib/build-config").build;
 var cloudformation = require("./lib/cloud-formation.js");
-var aws = require("aws-sdk");
 var fs = require("fs");
 
 program

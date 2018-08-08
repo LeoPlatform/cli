@@ -1,7 +1,8 @@
 "use strict";
 
 var fs = require("fs");
-var configure = __CONFIG__[process.env.NODE_ENV];
+var fullConfig = __CONFIG__;
+var configure = fullConfig[process.env.NODE_ENV] || fullConfig._global || {};
 
 let pages = __PAGES__;
 
@@ -39,7 +40,7 @@ function getPage(page) {
 			if (variable == "leo") {
 				return JSON.stringify(configure);
 			} else {
-				return variables[variable];
+				return variables[variable].toLowerCase();
 			}
 		});
 	}
