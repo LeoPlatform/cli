@@ -9,6 +9,7 @@ program
 	.version('0.0.1')
 	.option("-e, --env [env]", "Environment")
 	.option("--build", "Only build")
+	.option("--tag [tag]", "Tag name")
 	.option("-cs --changeset", "Only build changeset")
 	.option("-c --cloudformation", "Only build cloudformation")
 	.option("-d, --deploy [env]", "Deploys the published cloudformation")
