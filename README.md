@@ -95,14 +95,16 @@ See [leo-config](https://github.com/LeoPlatform/leo-config) for config details. 
 
 options
 * **-e --env [environment]**        Environment.
-* **-cs --changeset**               Only build Changeset.
+* **--changeset**                   Only build Changeset.
 * **-c**                            Only build cloudformation.
+* **-s**                            Save cloudformation.json to the microservice directory.
+* **-F --force-deploy**             Force-deploy without requiring confirmation of changeset.
 * **-d --deploy [environment]**     Deploy the published cloudformation.
 * **-f all --force all**            Force publish and deploy of all bots, including ones without changes.
-* **--filter idGlobExp**			Filters the lambdas deployed by the given glob expression. default: *
-* **--run awsStackName**			Runs the generated cloudformation.json against the AWS Stack 'awsStackName'.  If the stack doesn't exist, it will be crated
-* **--build**						Builds the cloudformation and lambdas but doesn't publish them to s3
-* **--public**						Makes the s3 publish folder public
+* **--filter idGlobExp**            Filters the lambdas deployed by the given glob expression. default: *
+* **--run awsStackName**            Runs the generated cloudformation.json against the AWS Stack 'awsStackName'.  If the stack doesn't exist, it will be crated
+* **--build**                       Builds the cloudformation and lambdas but doesn't publish them to s3
+* **--public**                      Makes the s3 publish folder public
 
 Version of the build using the microservice or bot package.json file.  If a bot is forced to be built and has the same version number the current timestamp will be appended to he version
 

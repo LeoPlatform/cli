@@ -4,19 +4,32 @@ const path = require('path');
 const program = require('commander');
 
 program
-	.version('0.0.1')
-	.option("-e, --env [env]", "Environment")
-	.option("--build", "Only build")
-	.option("--tag [tag]", "Tag name")
-	.option("-cs --changeset", "Only build changeset")
-	.option("-c --cloudformation", "Only build cloudformation")
-	.option("-d, --deploy [env]", "Deploys the published cloudformation")
-	.option("-f, --force [force]", "Force bots to publish")
-	.option("--filter [filter]", "Filter bots to publish")
-	.option("--public [public]", "Publish as public")
-	.option("-s --save [save]", "Save the cloudformation.json to the microservice directory")
-	.arguments('[directory] [options]')
-	.usage('[directory] [options]');
+.version('0.0.1')
+.option("-e, --env [env]", "Environment")
+.option("--build", "Only build")
+.option("--tag [tag]", "Tag name")
+.option("--changeset", "Only build changeset")
+.option("-c --cloudformation", "Only build cloudformation")
+.option("-d, --deploy [env]", "Deploys the published cloudformation")
+.option("-f, --force [force]", "Force bots to publish")
+.option("--filter [filter]", "Filter bots to publish")
+.option("--public [public]", "Publish as public")
+.option("-s --save [save]", "Save the cloudformation.json to the microservice directory")
+.option('-F --force-deploy', 'Automatically deploy without requesting verification of changeset')
+.arguments('[directory] [options]')
+.usage('[directory] [options]');
+
+const progressInterval = {
+	interval: undefined,
+	start: () => {
+		this.interval = setInterval(() => {
+			process.stdout.write(".")
+		}, 2000);
+	},
+	stop: () => {
+		clearInterval(this.interval);
+	}
+};
 
 (async function run() {
 	program.parse(process.argv);
@@ -80,13 +93,11 @@ program
 		data.forEach((publish) => {
 			let devConfig = config.deploy[process.env.NODE_ENV];
 
-			let url = publish.url + "cloudformation.json"
+			let url = publish.url + "cloudformation.json";
 			console.time("Update Complete");
-			console.log(`\n---------------Creating Stack ChangeSet "${process.env.NODE_ENV} ${publish.target.stack} ${publish.region}"---------------`);
+			console.log(`\n---------------Creating Stack ChangeSet "${process.env.NODE_ENV} ${config.deploy[process.env.NODE_ENV].stack} ${publish.region}"---------------`);
 			console.log(`url: ${url}`);
-			let progress = setInterval(() => {
-				process.stdout.write(".")
-			}, 2000);
+			progressInterval.start();
 
 			let Parameters = [{
 				ParameterKey: 'Environment',
@@ -105,18 +116,22 @@ program
 				}
 			}));
 
-			publish.target.leoaws.cloudformation.runChangeSet(config.deploy[process.env.NODE_ENV].stack, url, {
-				Parameters: Parameters
-			}).then(() => {
-				clearInterval(progress);
+			publish.target.leoaws.cloudformation.runChangeSet(
+				config.deploy[process.env.NODE_ENV].stack
+				, url
+				, {Parameters: Parameters}
+				, {forceDeploy: program.forceDeploy, progressInterval: progressInterval}
+			).then(() => {
+				progressInterval.stop();
 				console.log("");
 				console.timeEnd("Update Complete");
 				process.exit();
 			}).catch(err => {
-				clearInterval(progress);
+				progressInterval.stop();
 				console.log(" Update Error:", err);
 				process.exit();
 			});
 		});
 	}
 })();
+
