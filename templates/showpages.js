@@ -50,7 +50,7 @@ function getPage(page) {
 
 exports.handler = function(event, context, callback) {
 	var page = event.resource;
-	variables['leo.baseHref'] = variables.baseHref = '/' + event.requestContext.path.split('/')[1].replace(/\/$/, '') + "/";
+	variables['leo.basehref'] = variables.basehref = '/' + event.requestContext.path.split('/')[1].replace(/\/$/, '') + "/";
 	if (page.match(/\/$/)) {
 		page += "_base";
 	}
