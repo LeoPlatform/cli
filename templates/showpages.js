@@ -37,10 +37,11 @@ function getPage(page) {
 	if (!(page in pageCache)) {
 		let data = fs.readFileSync("./pages/" + page, 'utf8');
 		pageCache[page] = data.replace(/\$\{(leo[^{}]*?)\}/g, function(match, variable) {
+			variable = variable.toLowerCase();
 			if (variable == "leo") {
 				return JSON.stringify(configure);
 			} else {
-				return variables[variable].toLowerCase();
+				return variables[variable];
 			}
 		});
 	}
@@ -49,7 +50,7 @@ function getPage(page) {
 
 exports.handler = function(event, context, callback) {
 	var page = event.resource;
-	variables.baseHref = event.requestContext.path.replace(/\/$/, '') + "/";
+	variables['leo.basehref'] = variables.basehref = '/' + event.requestContext.path.split('/')[1].replace(/\/$/, '') + "/";
 	if (page.match(/\/$/)) {
 		page += "_base";
 	}
