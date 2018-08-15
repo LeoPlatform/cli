@@ -1,7 +1,8 @@
 "use strict";
 
 var fs = require("fs");
-var configure = __CONFIG__[process.env.NODE_ENV];
+var fullConfig = __CONFIG__;
+var configure = fullConfig[process.env.NODE_ENV] || fullConfig._global || {};
 
 let pages = __PAGES__;
 
@@ -36,6 +37,7 @@ function getPage(page) {
 	if (!(page in pageCache)) {
 		let data = fs.readFileSync("./pages/" + page, 'utf8');
 		pageCache[page] = data.replace(/\$\{(leo[^{}]*?)\}/g, function(match, variable) {
+			variable = variable.toLowerCase();
 			if (variable == "leo") {
 				return JSON.stringify(configure);
 			} else {
@@ -48,7 +50,7 @@ function getPage(page) {
 
 exports.handler = function(event, context, callback) {
 	var page = event.resource;
-	variables.baseHref = event.requestContext.path.replace(/\/$/, '') + "/";
+	variables['leo.basehref'] = variables.basehref = '/' + event.requestContext.path.split('/')[1].replace(/\/$/, '') + "/";
 	if (page.match(/\/$/)) {
 		page += "_base";
 	}

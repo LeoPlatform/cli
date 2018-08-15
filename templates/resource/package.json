@@ -12,7 +12,7 @@
   "config": {
     "leo": {
       "type": "resource",
-      "uri": "*:/api/____DIRNAME____",
+      "uri": "ANY:/api/____DIRNAME____",
       "handler": "handler",
       "role": null,
       "memory": 256,
