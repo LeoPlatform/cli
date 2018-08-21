@@ -64,6 +64,10 @@ program
 		}
 		let prefix = "./";
 
+		if (!dir) {
+			console.log("dir is required")
+			process.exit(1);
+		}
 		if (roots[type] && path.resolve(dir).indexOf(roots[type]) === -1) {
 			prefix = roots[type] || "";
 		}

@@ -4,20 +4,20 @@ const path = require('path');
 const program = require('commander');
 
 program
-.version('0.0.1')
-.option("-e, --env [env]", "Environment")
-.option("--build", "Only build")
-.option("--tag [tag]", "Tag name")
-.option("--changeset", "Only build changeset")
-.option("-c --cloudformation", "Only build cloudformation")
-.option("-d, --deploy [env]", "Deploys the published cloudformation")
-.option("-f, --force [force]", "Force bots to publish")
-.option("--filter [filter]", "Filter bots to publish")
-.option("--public [public]", "Publish as public")
-.option("-s --save [save]", "Save the cloudformation.json to the microservice directory")
-.option('-F --force-deploy', 'Automatically deploy without requesting verification of changeset')
-.arguments('[directory] [options]')
-.usage('[directory] [options]');
+	.version('0.0.1')
+	.option("-e, --env [env]", "Environment")
+	.option("--build", "Only build")
+	.option("--tag [tag]", "Tag name")
+	.option("--changeset", "Only build changeset")
+	.option("-c --cloudformation", "Only build cloudformation")
+	.option("-d, --deploy [env]", "Deploys the published cloudformation")
+	.option("-f, --force [force]", "Force bots to publish")
+	.option("--filter [filter]", "Filter bots to publish")
+	.option("--public [public]", "Publish as public")
+	.option("-s --save [save]", "Save the cloudformation.json to the microservice directory")
+	.option('-F --force-deploy', 'Automatically deploy without requesting verification of changeset')
+	.arguments('[directory] [options]')
+	.usage('[directory] [options]');
 
 const progressInterval = {
 	interval: undefined,
@@ -39,6 +39,12 @@ const progressInterval = {
 		rootDir = process.cwd();
 	} else {
 		rootDir = path.resolve(process.cwd(), dir);
+	}
+
+	// if using just '-d' then set the deploy to 'dev'
+	if (program.env === true || program.deploy === true) {
+		delete program.env;
+		program.deploy = "dev";
 	}
 
 	let env = program.env || program.deploy || "dev";
@@ -117,10 +123,12 @@ const progressInterval = {
 			}));
 
 			publish.target.leoaws.cloudformation.runChangeSet(
-				config.deploy[process.env.NODE_ENV].stack
-				, url
-				, {Parameters: Parameters}
-				, {forceDeploy: program.forceDeploy, progressInterval: progressInterval}
+				config.deploy[process.env.NODE_ENV].stack, url, {
+					Parameters: Parameters
+				}, {
+					forceDeploy: program.forceDeploy,
+					progressInterval: progressInterval
+				}
 			).then(() => {
 				progressInterval.stop();
 				console.log("");
@@ -134,4 +142,3 @@ const progressInterval = {
 		});
 	}
 })();
-
