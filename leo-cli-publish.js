@@ -96,12 +96,21 @@ const progressInterval = {
 	}
 
 	if (program.run) {
-		data.forEach((publish) => {
-			let devConfig = config.deploy[process.env.NODE_ENV];
+		let tasks = [];
+		let devConfig = config.deploy[process.env.NODE_ENV];
+		let deployRegions = devConfig.region || [];
+		if (!Array.isArray(deployRegions)) {
+			deployRegions = [deployRegions];
+		}
+		data.filter(p => deployRegions.length == 0 || deployRegions.indexOf(p.region) >= 0).map(publish => {
+			if (publish == undefined) {
+				console.log(`\n---------------"${process.env.NODE_ENV} ${devConfig.stack} ${publish.region}"---------------`);
+				return;
+			}
 
 			let url = publish.url + "cloudformation.json";
 			console.time("Update Complete");
-			console.log(`\n---------------Creating Stack ChangeSet "${process.env.NODE_ENV} ${config.deploy[process.env.NODE_ENV].stack} ${publish.region}"---------------`);
+			console.log(`\n---------------Creating Stack ChangeSet "${process.env.NODE_ENV} ${devConfig.stack} ${publish.region}"---------------`);
 			console.log(`url: ${url}`);
 			progressInterval.start();
 
@@ -122,23 +131,28 @@ const progressInterval = {
 				}
 			}));
 
-			publish.target.leoaws.cloudformation.runChangeSet(
-				config.deploy[process.env.NODE_ENV].stack, url, {
+			tasks.push(publish.target.leoaws.cloudformation.runChangeSet(
+				devConfig.stack, url, {
 					Parameters: Parameters
 				}, {
 					forceDeploy: program.forceDeploy,
 					progressInterval: progressInterval
 				}
 			).then(() => {
-				progressInterval.stop();
 				console.log("");
-				console.timeEnd("Update Complete");
-				process.exit();
+				console.timeEnd("Update Complete", publish.region);
 			}).catch(err => {
-				progressInterval.stop();
-				console.log(" Update Error:", err);
-				process.exit();
-			});
+				console.log(` Update Error: ${publish.region}`, err);
+			}));
 		});
+		Promise.all(tasks).then(() => {
+			progressInterval.stop();
+			tasks.length > 0 && console.log("Ran all deployments");
+			process.exit();
+		}).catch((err) => {
+			progressInterval.stop();
+			tasks.length > 0 && console.log("Failed on deployments", err);
+			process.exit();
+		})
 	}
 })();
