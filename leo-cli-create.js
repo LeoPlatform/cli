@@ -37,27 +37,47 @@ program
 		if (dirs.indexOf(type) === -1) {
 			let paths = require('module')._nodeModulePaths(process.cwd());
 			let modulePathExits = false;
-			for (let key in paths) {
-				let p = path.resolve(paths[key], `${type}/templates/${subtype}`);
-				modulePathExits = modulePathExits || fs.existsSync(path.resolve(paths[key], `${type}`));
-				if (fs.existsSync(p)) {
-					templatePath = p
-					break;
+			let ranNpmInstall = false;
+			let findTemplate = () => {
+				for (let key in paths) {
+					let p = path.resolve(paths[key], `${type}/templates/${subtype}`);
+					modulePathExits = modulePathExits || fs.existsSync(path.resolve(paths[key], `${type}`));
+					if (fs.existsSync(p)) {
+						templatePath = p
+						break;
+					}
 				}
-			}
-			if (dir && subtype && !templatePath) {
-				if (!modulePathExits) {
-					console.log(`Missing module '${type}'.  Run 'npm install ${type}' to install the module`);
-				} else {
-					console.log(`Unable to find template '${subtype}' in module '${type}/templates'`);
+				if (dir && subtype && !templatePath) {
+					if (!modulePathExits) {
+						if (ranNpmInstall) {
+							console.log(`Missing module '${type}'.  Run 'npm install ${type}' to install the module`);
+							process.exit(1);
+						} else {
+							ranNpmInstall = true;
+							try {
+								console.log(`Missing module '${type}'.  Running 'npm install ${type}' to install the module`);
+								require('child_process').execSync(`npm install ${type}`, {
+									cwd: process.cwd()
+								});
+								findTemplate();
+							} catch (err) {
+								console.log(`Error running 'npm install ${type}'`)
+								process.exit(1)
+							}
+						}
+					} else {
+						console.log(`Unable to find template '${subtype}' in module '${type}/templates'`);
+						process.exit(1);
+					}
+				} else if (!templatePath) {
+					dir = subtype;
+					subtype = undefined;
+					console.log(`Unable to find template '${type}'`);
+					process.exit(1);
 				}
-				process.exit(1);
-			} else if (!templatePath) {
-				dir = subtype;
-				subtype = undefined;
-				console.log(`Unable to find template '${type}'`);
-				process.exit(1);
-			}
+			};
+
+			findTemplate();
 		} else {
 			dir = subtype;
 			subtype = undefined;
