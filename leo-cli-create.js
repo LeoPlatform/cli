@@ -56,7 +56,7 @@ program
 							ranNpmInstall = true;
 							try {
 								console.log(`Missing module '${type}'.  Running 'npm install ${type}' to install the module`);
-								require('child_process').execSync(`npm install ${type}`, {
+								require('child_process').execSync(`npm install ${type} --loglevel=error`, {
 									cwd: process.cwd()
 								});
 								findTemplate();
@@ -120,7 +120,7 @@ program
 					cwd = path.resolve(cwd);
 				}
 				console.log(`------ Running NPM Install on "${cwd}" ------`);
-				require('child_process').execSync("npm install", {
+				require('child_process').execSync("npm install --loglevel=error", {
 					cwd: cwd
 				});
 			},
