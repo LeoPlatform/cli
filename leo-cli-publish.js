@@ -4,20 +4,20 @@ const path = require('path');
 const program = require('commander');
 
 program
-.version('0.0.1')
-.option("-e, --env [env]", "Environment")
-.option("--build", "Only build")
-.option("--tag [tag]", "Tag name")
-.option("--changeset", "Only build changeset")
-.option("-c --cloudformation", "Only build cloudformation")
-.option("-d, --deploy [env]", "Deploys the published cloudformation")
-.option("-f, --force [force]", "Force bots to publish")
-.option("--filter [filter]", "Filter bots to publish")
-.option("--public [public]", "Publish as public")
-.option("-s --save [save]", "Save the cloudformation.json to the microservice directory")
-.option('-F --force-deploy', 'Automatically deploy without requesting verification of changeset')
-.arguments('[directory] [options]')
-.usage('[directory] [options]');
+	.version('0.0.1')
+	.option("-e, --env [env]", "Environment")
+	.option("--build", "Only build")
+	.option("--tag [tag]", "Tag name")
+	.option("--changeset", "Only build changeset")
+	.option("-c --cloudformation", "Only build cloudformation")
+	.option("-d, --deploy [env]", "Deploys the published cloudformation")
+	.option("-f, --force [force]", "Force bots to publish")
+	.option("--filter [filter]", "Filter bots to publish")
+	.option("--public [public]", "Publish as public")
+	.option("-s --save [save]", "Save the cloudformation.json to the microservice directory")
+	.option('-F --force-deploy', 'Automatically deploy without requesting verification of changeset')
+	.arguments('[directory] [options]')
+	.usage('[directory] [options]');
 
 const progressInterval = {
 	interval: undefined,
@@ -39,6 +39,12 @@ const progressInterval = {
 		rootDir = process.cwd();
 	} else {
 		rootDir = path.resolve(process.cwd(), dir);
+	}
+
+	// if using just '-d' then set the deploy to 'dev'
+	if (program.env === true || program.deploy === true) {
+		delete program.env;
+		program.deploy = "dev";
 	}
 
 	let env = program.env || program.deploy || "dev";
@@ -90,12 +96,21 @@ const progressInterval = {
 	}
 
 	if (program.run) {
-		data.forEach((publish) => {
-			let devConfig = config.deploy[process.env.NODE_ENV];
+		let tasks = [];
+		let devConfig = config.deploy[process.env.NODE_ENV];
+		let deployRegions = devConfig.region || [];
+		if (!Array.isArray(deployRegions)) {
+			deployRegions = [deployRegions];
+		}
+		data.filter(p => deployRegions.length == 0 || deployRegions.indexOf(p.region) >= 0).map(publish => {
+			if (publish == undefined) {
+				console.log(`\n---------------"${process.env.NODE_ENV} ${devConfig.stack} ${publish.region}"---------------`);
+				return;
+			}
 
 			let url = publish.url + "cloudformation.json";
 			console.time("Update Complete");
-			console.log(`\n---------------Creating Stack ChangeSet "${process.env.NODE_ENV} ${config.deploy[process.env.NODE_ENV].stack} ${publish.region}"---------------`);
+			console.log(`\n---------------Creating Stack ChangeSet "${process.env.NODE_ENV} ${devConfig.stack} ${publish.region}"---------------`);
 			console.log(`url: ${url}`);
 			progressInterval.start();
 
@@ -116,22 +131,28 @@ const progressInterval = {
 				}
 			}));
 
-			publish.target.leoaws.cloudformation.runChangeSet(
-				config.deploy[process.env.NODE_ENV].stack
-				, url
-				, {Parameters: Parameters}
-				, {forceDeploy: program.forceDeploy, progressInterval: progressInterval}
+			tasks.push(publish.target.leoaws.cloudformation.runChangeSet(
+				devConfig.stack, url, {
+					Parameters: Parameters
+				}, {
+					forceDeploy: program.forceDeploy,
+					progressInterval: progressInterval
+				}
 			).then(() => {
-				progressInterval.stop();
 				console.log("");
-				console.timeEnd("Update Complete");
-				process.exit();
+				console.timeEnd("Update Complete", publish.region);
 			}).catch(err => {
-				progressInterval.stop();
-				console.log(" Update Error:", err);
-				process.exit();
-			});
+				console.log(` Update Error: ${publish.region}`, err);
+			}));
 		});
+		Promise.all(tasks).then(() => {
+			progressInterval.stop();
+			tasks.length > 0 && console.log("Ran all deployments");
+			process.exit();
+		}).catch((err) => {
+			progressInterval.stop();
+			tasks.length > 0 && console.log("Failed on deployments", err);
+			process.exit();
+		})
 	}
 })();
-

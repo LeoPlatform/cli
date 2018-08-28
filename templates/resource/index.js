@@ -16,6 +16,6 @@ exports.handler = async function(event, context, callback) {
 
 	console.log(user);
 
-	callback(null, "I changed this b");
+	callback(null, "I changed this bit");
 
 };

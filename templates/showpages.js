@@ -3,6 +3,10 @@
 var fs = require("fs");
 var fullConfig = __CONFIG__;
 var configure = fullConfig[process.env.NODE_ENV] || fullConfig._global || {};
+process.resources = process.env.Resources && JSON.parse(process.env.Resources) || {};
+if (process.resources.CustomFavicon == "") {
+	delete process.resources.CustomFavicon;
+}
 
 let pages = __PAGES__;
 
@@ -10,7 +14,7 @@ configure.uri = configure.staticAssets;
 configure.static = {
 	uri: configure.staticAssets
 };
-Object.assign(configure, process.resources = process.env.Resources && JSON.parse(process.env.Resources) || {});
+Object.assign(configure, process.resources);
 
 var p = pages.map(function(e) {
 	return "/" + e;

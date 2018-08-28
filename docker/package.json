@@ -1,0 +1,14 @@
+{
+	"name": "leo-docker",
+	"version": "1.0.0",
+	"description": "Run lambda in docker fargate",
+	"main": "run.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"aws-sdk": "^2.276.1"
+	}
+}
