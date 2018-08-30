@@ -35,9 +35,14 @@ function flattenVariables(obj, out, separator, prefix) {
 let variables = {};
 flattenVariables(configure, variables, '.', "leo.");
 
-let pageCache = {};
+let pageCachePerBasePath = {};
 
 function getPage(page) {
+	if (!(variables.basehref in pageCachePerBasePath)) {
+		pageCachePerBasePath[variables.basehref] = {};
+	}
+	let pageCache = pageCachePerBasePath[variables.basehref];
+
 	if (!(page in pageCache)) {
 		let data = fs.readFileSync("./pages/" + page, 'utf8');
 		pageCache[page] = data.replace(/\$\{(leo[^{}]*?)\}/g, function(match, variable) {
