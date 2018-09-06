@@ -114,10 +114,7 @@ const progressInterval = {
 			console.log(`url: ${url}`);
 			progressInterval.start();
 
-			let Parameters = [{
-				ParameterKey: 'Environment',
-				ParameterValue: process.env.NODE_ENV
-			}].concat(Object.keys(devConfig.parameters || {}).map(key => {
+			let Parameters = [].concat(Object.keys(devConfig.parameters || {}).map(key => {
 				let value = devConfig.parameters[key];
 				let noEcho = false;
 				if (typeof value.NoEcho !== 'undefined') {
@@ -130,6 +127,12 @@ const progressInterval = {
 					NoEcho: noEcho
 				}
 			}));
+			if(pkgConfig.no_env_param !== true) {
+				Parameters.push({
+                    ParameterKey: 'Environment',
+                    ParameterValue: process.env.NODE_ENV
+                });
+			}
 
 			tasks.push(publish.target.leoaws.cloudformation.runChangeSet(
 				devConfig.stack, url, {
