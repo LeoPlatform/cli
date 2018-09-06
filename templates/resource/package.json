@@ -1,29 +1,30 @@
 {
-  "name": "____BOTNAME____",
-  "version": "1.0.0",
-  "description": "This is a sample ApiGateway Description",
-  "main": "index.js",
-  "directories": {
-    "test": "test"
-  },
-  "scripts": {
-    "test": "leo-cli test ."
-  },
-  "config": {
-    "leo": {
-      "type": "resource",
-      "uri": "ANY:/api/____DIRNAME____",
-      "handler": "handler",
-      "role": null,
-      "memory": 256,
-      "timeout": 10
-    }
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "leo-auth": ">=1.0.0",
-    "leo-aws": ">=1.0.0"
-  }
+	"name": "____BOTNAME____",
+	"version": "1.0.0",
+	"description": "This is a sample ApiGateway Description",
+	"main": "index.js",
+	"directories": {
+		"test": "test"
+	},
+	"scripts": {
+		"test": "leo-cli test ."
+	},
+	"config": {
+		"leo": {
+			"type": "resource",
+			"uri": "ANY:/api/____DIRNAME____",
+			"handler": "handler",
+			"role": null,
+			"memory": 256,
+			"timeout": 10
+		}
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"leo-auth": ">=1.0.0",
+		"leo-aws": ">=1.0.0",
+		"leo-sdk": ">=1.0.0"
+	}
 }

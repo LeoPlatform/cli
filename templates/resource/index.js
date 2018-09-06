@@ -2,7 +2,7 @@
 const leoaws = require("leo-aws");
 var request = require("leo-auth");
 
-exports.handler = async function(event, context, callback) {
+exports.handler = require("leo-sdk/wrappers/resource")(async function(event, context, callback) {
 	let dynamodb = leoaws.dynamodb;
 
 	let user = await request.getUser(event);
@@ -18,4 +18,4 @@ exports.handler = async function(event, context, callback) {
 
 	callback(null, "I changed this bit");
 
-};
+});

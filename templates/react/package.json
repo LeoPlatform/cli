@@ -4,9 +4,9 @@
 	"description": "",
 	"main": "app.js",
 	"scripts": {
-		"start": "leo test .",
+		"start": "leo-cli test .",
 		"test": "mocha --require ./test/bootstrap.js --recursive -w",
-		"debug": "node-debug leo test ."
+		"debug": "node-debug leo-cli test ."
 	},
 	"config": {
 		"leo": {
