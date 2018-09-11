@@ -48,6 +48,21 @@ cd /MySystem
 leo-cli create microservice MyService
 ```
 
+Create a React Application
+---------------
+Applications must be created inside a system directory
+
+```
+cd /MySystem
+leo-cli create react MyReactApp
+```
+
+Additional LEO tools: 
+
+[LEO Authentication](https://github.com/LeoPlatform/bus-ui/tree/master/ui/static/js) - Helps provide cognito authenticated api calls
+
+[LEO Authorization](https://github.com/LeoPlatform/auth-sdk) - A Front-end Authorization framework that is modeled after AWS Permission structure
+
 
 Build Bots
 -----------------
