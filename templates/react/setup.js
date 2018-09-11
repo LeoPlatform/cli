@@ -1,14 +1,24 @@
 'use strict';
 module.exports = {
 	inquire: async function (utils) {
-		let environments = await utils.createLeoEnvironments();
+		let data = await utils.createLeoConfig(Object.assign({
+			_global: {},
+			_local: {}
+		}), {
+			name: utils.name,
+			askForEnvs: true,
+			params: {}
+		});
+
 		return {
-			template: utils.createLeoConfig(environments)
+			leoconfig: data.leo,
+			leocliconfig: data.cli
 		};
 	},
 
 	process: async function (utils, context) {
-		utils.storeLeoConfigJS(context.template);
+		utils.storeFile("leo_config.js", context.leoconfig);
+		utils.storeFile("leo_cli_config.js", context.leocliconfig);
 		return {};
 	}
 };
