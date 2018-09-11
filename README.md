@@ -63,6 +63,7 @@ Additional LEO tools:
 
 [LEO Authorization](https://github.com/LeoPlatform/auth-sdk) - A Front-end Authorization framework that is modeled after AWS Permission structure
 
+[Front End Specific Configuration](https://github.com/LeoPlatform/leo-config#ui-config) - Configure AWS Cognito for Front End apps
 
 Build Bots
 -----------------
