@@ -15,6 +15,7 @@ Overview of the Leo Platform: https://docs.leoplatform.io
 1. Install the aws-cli toolkit - Instructions for this are found at http://docs.aws.amazon.com/cli/latest/userguide/installing.html
 2. Configure the aws-cli tools - Instructions are found at http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html
 3. Install node - https://nodejs.org/en/
+4. Deploy the [Leo Bus Cloudformation](https://github.com/LeoPlatform/Leo#step-2-install-the-leo-platform)
 
 ### Install
 
@@ -24,46 +25,47 @@ Overview of the Leo Platform: https://docs.leoplatform.io
 npm install leo-cli -g
 ```
 
-### How to use the Leo CLI
+## leo-cli create
 
-
-If you are not ready to create your Microservcies, See the [Quick Start](https://github.com/LeoPlatform/Leo#step-3-create-a-quickstart-project) for an example.
-
-
-
-Create a System
----------------
+### Create a System
 A system provides you the opportunity to create a cohesive group of microservices. It is not required, but gives you a moment to consider the overall structure of your project. The `leo-cli create` commands will create a directory.
 
 ```
 leo-cli create system MySystem
+cd MySystem
 ```
 
-Create a Microservice
----------------
+### Create a Microservice
+
 A microservice is the central architectural construct
 ```
-cd /MySystem
 leo-cli create microservice MyService
+cd MyService
 ```
 
-Create a React Application
----------------
+### Create a REST API
+
+Microservice exposed via REST.
+```
+leo-cli create resource MyAPI
+cd MyAPI
+```
+
+### Create a React Application
+
 A front-end application. Also considered a microservice
 ```
-cd /MySystem
 leo-cli create react MyReactApp
+cd MyReactApp
 ```
-
-Additional LEO tools: 
+Additional tools for Leo front-end applications: 
 
 [LEO Authentication](https://github.com/LeoPlatform/bus-ui/tree/master/ui/static/js) - Helps provide cognito authenticated api calls
 
 [LEO Authorization](https://github.com/LeoPlatform/auth-sdk) - A Front-end Authorization framework that is modeled after AWS Permission structure
 
 
-Build Bots
------------------
+### Build Bots
 Bots must be created inside a microservice directory
 
 ```
@@ -75,8 +77,7 @@ leo-cli create bot MyBot
 leo-cli create cron MyCronBot
 ```
 
-Testing Bots
--------------------
+#### Testing Bots
 Inside a bot directory
 
 ```
@@ -84,8 +85,7 @@ cd /MySystem/MyService/bots/MyBot
 leo-cli test .
 ```
 
-Runing Bots
------------
+#### Runing Bots
 Inside a bot or resource directory
 
 ```
@@ -93,8 +93,7 @@ cd /MySystem/MyService/bots/MyBot
 leo-cli run .
 ```
 
-Publishing Microservices & Bots
--------------------------------------
+## leo-cli publish - Publishing Microservices & Bots
 Publishing a microservice will build all needed lambda functions into zip files and a cloudformation file.  Those files are then uploaded to your publish s3 bucket.
 
 The publish command must be run from a micorservice or bot directory
