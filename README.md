@@ -1,39 +1,39 @@
-LeoPlatform/cli
-===================
+# LeoPlatform/cli
 
-Leo CLI
+## leo-cli
 
-A Nodejs interface to interact with the Leo SDK and AWS
+The Leo command line interface
 
-Quick Start Guide: https://github.com/LeoPlatform/Leo
+After installaction: Quick Start Guide: https://github.com/LeoPlatform/Leo
 
-Documentation: https://docs.leoplatform.io
+Overview of the Leo Platform: https://docs.leoplatform.io
 
-How to install the Leo CLI
-===================================
+## Installation
 
-Pre-Requisites
---------------
+### Pre-Requisites
+
 1. Install the aws-cli toolkit - Instructions for this are found at http://docs.aws.amazon.com/cli/latest/userguide/installing.html
 2. Configure the aws-cli tools - Instructions are found at http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html
 3. Install node - https://nodejs.org/en/
 
-Install CLI
------------
+### Install
+
 1. Install using npm.  In your project folder run the following command.
 
 ```
 npm install leo-cli -g
 ```
 
-How to use the Leo CLI
-===================================
+### How to use the Leo CLI
 
-At this point, we recommend following the [Quick Start instructions](https://github.com/LeoPlatform/Leo#step-3-create-a-quickstart-project) to create a project shell with example bots.
+
+If you are not ready to create your Microservcies, See the [Quick Start](https://github.com/LeoPlatform/Leo#step-3-create-a-quickstart-project) for an example.
+
+
 
 Create a System
 ---------------
-A system is the root directory for a group of microservices & bots.  This command will create a directory for the system.
+A system provides you the opportunity to create a cohesive group of microservices. It is not required, but gives you a moment to consider the overall structure of your project. The `leo-cli create` commands will create a directory.
 
 ```
 leo-cli create system MySystem
@@ -41,8 +41,7 @@ leo-cli create system MySystem
 
 Create a Microservice
 ---------------
-Microservices must be created inside a system directory
-
+A microservice is the central architectural construct
 ```
 cd /MySystem
 leo-cli create microservice MyService
@@ -50,8 +49,7 @@ leo-cli create microservice MyService
 
 Create a React Application
 ---------------
-Applications must be created inside a system directory
-
+A front-end application. Also considered a microservice
 ```
 cd /MySystem
 leo-cli create react MyReactApp
