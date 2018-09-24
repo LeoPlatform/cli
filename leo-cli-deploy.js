@@ -70,6 +70,12 @@ const progressInterval = {
 
 	let tasks = [];
 	let devConfig = config.deploy[process.env.NODE_ENV];
+
+	if (devConfig == undefined) {
+		console.log(`leo_cli_config.js is not configured for environment '${process.env.NODE_ENV}'`);
+		process.exit();
+	}
+
 	let deployRegions = program.region ? program.region : (devConfig.region || []);
 	if (!Array.isArray(deployRegions)) {
 		deployRegions = [deployRegions];
