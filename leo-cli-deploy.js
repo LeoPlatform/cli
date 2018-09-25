@@ -9,71 +9,166 @@ var fs = require("fs");
 
 program
 	.version('0.0.1')
+	.option("-e, --env [env]", "Environment")
 	.option("--region [region]", "Region to run cloudformation")
 	.option("--url [url]", "s3 url to cloudformation.json")
-	.option("--awsprofile [awsprofile]", "AWS Profile to use")
 	.option("--tag [tag]", "Tag for publish directory.  eg. prod")
-	.usage('<dir> <stack> [options]')
-	.action(function (dir, stack) {
-		let rootDir = path.resolve(process.cwd(), dir);
-		let configure = buildConfig(rootDir);
-		if (configure.type !== "microservice" && configure._meta.microserviceDir) {
-			rootDir = configure._meta.microserviceDir;
-			configure = buildConfig(rootDir);
+	.option("--ver [ver]", "Version to deploy.")
+	.option("--build [build]", "Build number to deploy from the version.")
+	.option('-F --force-deploy', 'Automatically deploy without requesting verification of changeset')
+	.usage('[options]');
+
+
+const progressInterval = {
+	interval: undefined,
+	start: () => {
+		this.interval = setInterval(() => {
+			process.stdout.write(".")
+		}, 2000);
+	},
+	stop: () => {
+		clearInterval(this.interval);
+	}
+};
+
+(async function run() {
+	program.parse(process.argv);
+	let [dir] = program.args;
+	let rootDir;
+	if (!dir) {
+		rootDir = process.cwd();
+	} else {
+		rootDir = path.resolve(process.cwd(), dir);
+	}
+
+	if (program.env === true) {
+		program.env = "dev";
+	}
+
+	let env = program.env || "dev";
+
+	process.env.NODE_ENV = process.env.LEO_ENV = env;
+	process.env.LEO_REGION = program.region;
+
+	let config = require("./leoCliConfigure.js")(process.env.NODE_ENV);
+	let buildConfig = require("./lib/build-config").build;
+	let pkgConfig = buildConfig(rootDir);
+
+	if (pkgConfig.type !== "microservice" && pkgConfig._meta.microserviceDir) {
+		filter = rootDir.replace(/^.*?(bots|api)[\\/]/, "");
+		force = filter;
+		rootDir = pkgConfig._meta.microserviceDir;
+		pkgConfig = buildConfig(rootDir);
+	}
+
+	let publishConfig = config.publish;
+	if (!publishConfig) {
+		console.log("YOU HAVE NOT SETUP YOUR LEOPUBLISH");
+		process.exit();
+	}
+
+
+	let tasks = [];
+	let devConfig = config.deploy[process.env.NODE_ENV];
+
+	if (devConfig == undefined) {
+		console.log(`leo_cli_config.js is not configured for environment '${process.env.NODE_ENV}'`);
+		process.exit();
+	}
+
+	let deployRegions = program.region ? program.region : (devConfig.region || []);
+	if (!Array.isArray(deployRegions)) {
+		deployRegions = [deployRegions];
+	}
+	publishConfig.forEach(target => {
+		target.leoaws = require("leo-aws")(target.leoaws);
+	});
+	let buckets = await new Promise((resolve, reject) => {
+		require("./lib/cloud-formation.js").getBuckets(publishConfig, {
+			ignoreErrors: false,
+			name: program.cliStack
+		}, (err, data) => {
+			if (err) reject(err);
+			else resolve(data);
+		})
+	});
+
+
+	const microservice = JSON.parse(fs.readFileSync(path.resolve(path.resolve(rootDir, "package.json"))));
+	let version = program.ver || microservice.version || "latest";
+
+	let cfFilename = "cloudformation.json";
+	if (version == "latest") {
+		cfFilename = `cloudformation-${version}.json`;
+		version = null;
+	} else if (program.build) {
+		cfFilename = `cloudformation-${program.build}.json`;
+	}
+
+	version = version ? (version + "/") : "";
+	let tag = (program.tag ? (program.tag.match(/^[/\\]/) ? program.tag : `/${program.tag}`) : "").replace(/\\/g, "/");
+	let data = buckets.map(bucket => {
+		let s3region = bucket.region == "us-east-1" ? "" : "-" + bucket.region;
+		return {
+			region: bucket.region,
+			url: program.url || `https://s3${s3region}.amazonaws.com/${bucket.bucket}/${microservice.name}${tag}/${version}`,
+			target: bucket.target
+		}
+	}).filter(p => deployRegions.length == 0 || deployRegions.indexOf(p.region) >= 0);
+
+	data.map(publish => {
+		if (publish == undefined) {
+			console.log(`\n---------------"${process.env.NODE_ENV} ${devConfig.stack} ${publish.region}"---------------`);
+			return;
 		}
 
-		if (program.awsprofile || configure.aws.profile) {
-			process.env.LEO_AWS_PROFILE = program.awsprofile || configure.aws.profile;
-		}
-		program.region = program.region || (configure.regions || [])[0] || "us-west-2";
+		let url = publish.url + cfFilename;
+		console.time("Update Complete");
+		console.log(`\n---------------Creating Stack ChangeSet "${process.env.NODE_ENV} ${devConfig.stack} ${publish.region}"---------------`);
+		console.log(`url: ${url}`);
+		progressInterval.start();
 
-		program.tag = (program.tag ? (program.tag.match(/^[\/\\]/) ? program.tag : `/${program.tag}`) : "").replace(/\\/g, "/");
-		if (stack && typeof stack === "string") {
-			cloudformation.getBuckets([program.region], {}, (err, buckets) => {
-				const cloudFormationFile = path.resolve(path.resolve(dir, "cloudformation.json"));
-				const microservice = JSON.parse(fs.readFileSync(path.resolve(path.resolve(dir, "package.json"))));
-
-				if (!fs.existsSync(cloudFormationFile)) {
-					console.log("cloudformation.json file doesn't exist.\nRun the command 'leo-cli publish .'")
-					process.exit();
-				}
-				let version = microservice.version;
-				let s3region = program.region == "us-east-1" ? "" : "-" + program.region;
-				let bucket = {
-					region: program.region,
-					url: program.url || `https://s3${s3region}.amazonaws.com/${buckets[0].bucket}/${microservice.name}${program.tag}/${version}/`,
-					cloudFormation: JSON.parse(fs.readFileSync(cloudFormationFile))
-				};
-				let url = bucket.url + "cloudformation.json"
-				let updateStart = Date.now();
-				console.log(`\n---------------Updating stack "${stack}"---------------`);
-				console.log(`url: ${url}`);
-				let progress = setInterval(() => {
-					process.stdout.write(".")
-				}, 2000);
-				cloudformation.run(stack, program.region, url, {
-					Parameters: Object.keys(bucket.cloudFormation.Parameters || {}).map(key => {
-						return {
-							ParameterKey: key,
-							UsePreviousValue: true,
-							NoEcho: bucket.cloudFormation.Parameters[key].NoEcho
-						}
-					})
-				}).then(data => {
-					clearInterval(progress);
-					console.log(` Update Complete ${Date.now() - updateStart}`);
-				}).catch(err => {
-					clearInterval(progress);
-					console.log(" Update Error:", err);
-				});
+		let Parameters = [].concat(Object.keys(devConfig.parameters || {}).map(key => {
+			let value = devConfig.parameters[key];
+			let noEcho = false;
+			if (typeof value.NoEcho !== 'undefined') {
+				noEcho = value.NoEcho;
+				value = value.value;
+			}
+			return {
+				ParameterKey: key,
+				ParameterValue: value,
+				NoEcho: noEcho
+			}
+		}));
+		if (pkgConfig.no_env_param !== true) {
+			Parameters.push({
+				ParameterKey: 'Environment',
+				ParameterValue: process.env.NODE_ENV
 			});
-		} else {
-			console.log("parameter 'stack' is required");
 		}
 
+		tasks.push(publish.target.leoaws.cloudformation.runChangeSet(
+			devConfig.stack, url, {
+				Parameters: Parameters
+			}, {
+				forceDeploy: program.forceDeploy,
+				progressInterval: progressInterval
+			}
+		).then(() => {
+			console.log("");
+			console.timeEnd("Update Complete", publish.region);
+		}).catch(err => {
+			console.log(` Update Error: ${publish.region}`, err);
+		}));
+	});
+	Promise.all(tasks).then(() => {
+		progressInterval.stop();
+		tasks.length > 1 && console.log("Ran all deployments");
+		process.exit();
+	}).catch((err) => {
+		progressInterval.stop();
+		tasks.length > 1 && console.log("Failed on deployments", err);
+		process.exit();
 	})
-	.parse(process.argv);
-
-if (!process.argv.slice(2).length) {
-	program.outputHelp(colors.red);
-}
+})();
