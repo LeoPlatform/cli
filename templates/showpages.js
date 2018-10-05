@@ -1,6 +1,7 @@
 "use strict";
 
 var fs = require("fs");
+var login = require("./login.js")(process.env.Logins);
 var fullConfig = __CONFIG__;
 var configure = fullConfig[process.env.NODE_ENV] || fullConfig._global || {};
 process.resources = process.env.Resources && JSON.parse(process.env.Resources) || {};
@@ -32,6 +33,7 @@ function flattenVariables(obj, out, separator, prefix) {
 		}
 	});
 }
+configure.logins = "__delayed_logins__";
 let variables = {};
 flattenVariables(configure, variables, '.', "leo.");
 
@@ -57,6 +59,7 @@ function getPage(page) {
 	return pageCache[page];
 }
 
+
 exports.handler = function(event, context, callback) {
 	var page = event.resource;
 	variables['leo.basehref'] = variables.basehref = ("/" + event.requestContext.path.split('/')[1].replace(/\/$/, '') + "/").replace(/\/+/g, "/");
@@ -69,12 +72,21 @@ exports.handler = function(event, context, callback) {
 	}
 	if (p.indexOf(page) !== -1) {
 		try {
+
+			let logins = "null";
+			if (login.length()) {
+				logins = JSON.stringify({
+					Region: process.resources.Region,
+					IdentityPoolId: process.resources.CognitoId,
+					Logins: login.get(event)
+				})
+			}
 			callback(null, {
 				statusCode: 200,
 				headers: {
 					'Content-Type': 'text/html'
 				},
-				body: getPage(page)
+				body: getPage(page).replace(/__delayed_logins__/, logins)
 			});
 		} catch (err) {
 			callback(null, {
