@@ -86,7 +86,7 @@ exports.handler = function(event, context, callback) {
 				headers: {
 					'Content-Type': 'text/html'
 				},
-				body: getPage(page).replace(/__delayed_logins__/, logins)
+				body: getPage(page).replace(/"__delayed_logins__"/, logins)
 			});
 		} catch (err) {
 			callback(null, {

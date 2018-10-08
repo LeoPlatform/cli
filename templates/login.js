@@ -1,7 +1,8 @@
+const querystring = require('querystring');
 let handlers = {
 	saml: (event) => {
-		console.log(event);
-		return (event.body && event.body.SAMLResponse) || (event.queryStringParameters && event.queryStringParameters.SAMLResponse);
+		let body = typeof event.body == "string" ? querystring.parse(event.body) : event.body;
+		return (body && body.SAMLResponse) || (event.queryStringParameters && event.queryStringParameters.SAMLResponse);
 	}
 };
 module.exports = (data) => {
