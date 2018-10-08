@@ -227,6 +227,24 @@ program
 		console.log(`OK: Finished creating '${dir}'`);
 		process.exit();
 	})
+	.on("--help", function() {
+		console.log("");
+		console.log("Bot Examples:");
+		console.log("\tleo-cli create load MyLoadBot");
+		console.log("\tleo-cli create enrich MyEnrichBot");
+		console.log("\tleo-cli create offload MyOffloadBot");
+		console.log("\tleo-cli create cron MyCronBot");
+		console.log("\tleo-cli create leo-connector-mysql listener MySqlListener");
+
+		console.log("\nMicroservice Examples:");
+		console.log("\tleo-cli create microservice MyService");
+		console.log("\tleo-cli create react MyReactApp");
+
+		console.log("\nCreating a System:");
+		console.log("leo-cli create system MySystem");
+
+		console.log("\n\nSee https://github.com/LeoPlatform/cli for more details.\n");
+	})
 	.parse(process.argv);
 
 if (!process.argv.slice(2).length) {
