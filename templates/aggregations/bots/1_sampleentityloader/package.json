@@ -1,6 +1,7 @@
 {
 	"name": "____DIRNAME____-SampleEntityLoader",
 	"version": "1.0.0",
+	"private": true,
 	"description": "Takes data from a queue and loads into the entity table (DynamoDB)",
 	"main": "index.js",
 	"directories": {
