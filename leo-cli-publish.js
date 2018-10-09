@@ -16,6 +16,7 @@ program
 	.option("--public [public]", "Publish as public")
 	.option("-s --save [save]", "Save the cloudformation.json to the microservice directory")
 	.option('-F --force-deploy', 'Automatically deploy without requesting verification of changeset')
+	.option("-p --patch [patch]", "Patch from existing environment's deployed cloudformation.")
 	.arguments('[directory] [options]')
 	.usage('[directory] [options]');
 
@@ -72,6 +73,33 @@ const progressInterval = {
 		console.log("YOU HAVE NOT SETUP YOUR LEOPUBLISH");
 		process.exit();
 	}
+
+	let startingCloudformation = undefined;
+	if (program.patch) {
+		if (program.patch === true) {
+			program.patch = env;
+		}
+		if (program.patch == undefined) {
+			console.log("--patch requires a value or --deploy to be set");
+			process.exit();
+		}
+		let patch = config.deploy[process.env.NODE_ENV];
+		if (patch == undefined) {
+			console.log(`Environment ${process.env.NODE_ENV} is not configured.  Cannot create patch.`);
+			process.exit();
+		}
+		let deployRegions = patch.region || [];
+		let target = config.publish.filter(p => (deployRegions.length == 0 || (p.region && deployRegions.indexOf(p.region) > -1) ||
+			(p.leoaws && p.leoaws.region && deployRegions.indexOf(p.leoaws.region) > -1)
+		))[0];
+
+		if (target == undefined) {
+			console.log(`Cannot determine base cloudformation from ${process.env.NODE_ENV}.  Cannot create patch.`);
+			process.exit();
+		}
+		startingCloudformation = await require("leo-aws")(target.leoaws).cloudformation.get(patch.stack, {});
+	}
+
 	let data = await require("./lib/cloud-formation.js").createCloudFormation(rootDir, {
 		linkedStacks: config.linkedStacks,
 		config: pkgConfig,
@@ -83,7 +111,8 @@ const progressInterval = {
 		tag: program.tag,
 		public: program.public || false,
 		cloudFormationOnly: program.cloudformation,
-		saveCloudFormation: program.save
+		saveCloudFormation: program.save,
+		cloudformation: startingCloudformation
 	});
 
 	if (program.run || !program.build) {
@@ -127,11 +156,11 @@ const progressInterval = {
 					NoEcho: noEcho
 				}
 			}));
-			if(pkgConfig.no_env_param !== true) {
+			if (pkgConfig.no_env_param !== true) {
 				Parameters.push({
-                    ParameterKey: 'Environment',
-                    ParameterValue: process.env.NODE_ENV
-                });
+					ParameterKey: 'Environment',
+					ParameterValue: process.env.NODE_ENV
+				});
 			}
 
 			tasks.push(publish.target.leoaws.cloudformation.runChangeSet(
