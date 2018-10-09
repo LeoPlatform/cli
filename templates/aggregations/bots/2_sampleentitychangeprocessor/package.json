@@ -1,6 +1,7 @@
 {
   "name": "____DIRNAME____-SampleEntityChangeProcessor",
   "version": "1.0.0",
+	"private": true,
   "description": "Reads from DynamoDB entity table and writes to a queue with entity changes",
   "main": "index.js",
   "directories": {

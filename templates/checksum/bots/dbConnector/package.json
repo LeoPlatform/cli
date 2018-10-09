@@ -1,6 +1,7 @@
 {
 	"name": "__CONNECTOR_TYPE__Connector",
-	"version": "1.0.1",
+	"version": "1.0.0",
+	"private": true,
 	"description": "__CONNECTOR_TYPE__ Checksum connector",
 	"main": "index.js",
 	"directories": {

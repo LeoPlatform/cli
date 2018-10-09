@@ -1,6 +1,7 @@
 {
 	"name": "____DIRNAME____-api-sample",
 	"version": "1.0.0",
+	"private": true,
 	"description": "This is a sample ApiGateway Description",
 	"main": "index.js",
 	"directories": {
