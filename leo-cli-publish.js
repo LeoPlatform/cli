@@ -62,7 +62,7 @@ const progressInterval = {
 	console.log("BUILDING ", rootDir);
 
 	if (pkgConfig.type !== "microservice" && pkgConfig._meta.microserviceDir) {
-		filter = rootDir.replace(/^.*?(bots|api)[\\/]/, "");
+		filter = rootDir.replace(/^.*?[\\/](bots|api)[\\/]/, "");
 		force = filter;
 		rootDir = pkgConfig._meta.microserviceDir;
 		pkgConfig = buildConfig(rootDir);
