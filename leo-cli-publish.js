@@ -62,7 +62,7 @@ const progressInterval = {
 	console.log("BUILDING ", rootDir);
 
 	if (pkgConfig.type !== "microservice" && pkgConfig._meta.microserviceDir) {
-		filter = rootDir.replace(/^.*?(bots|api)[\\/]/, "");
+		filter = rootDir.replace(/^.*?[\\/](bots|api)[\\/]/, "");
 		force = filter;
 		rootDir = pkgConfig._meta.microserviceDir;
 		pkgConfig = buildConfig(rootDir);
@@ -97,7 +97,14 @@ const progressInterval = {
 			console.log(`Cannot determine base cloudformation from ${process.env.NODE_ENV}.  Cannot create patch.`);
 			process.exit();
 		}
-		startingCloudformation = await require("leo-aws")(target.leoaws).cloudformation.get(patch.stack, {});
+
+		try {
+			startingCloudformation = await require("leo-aws")(target.leoaws).cloudformation.get(patch.stack, {});
+		} catch (err) {
+			console.log(`Error getting base cloudformation from ${process.env.NODE_ENV}.  Cannot create patch.`);
+			console.log(err);
+			process.exit();
+		}
 	}
 
 	let data = await require("./lib/cloud-formation.js").createCloudFormation(rootDir, {

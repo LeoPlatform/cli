@@ -127,7 +127,7 @@ program
 			name: dir.replace(/[^a-zA-Z0-9]+/g, '_')
 		}, utils);
 
-		let setupFile = path.resolve(__dirname, 'templates/', type, 'setup.js');
+		let setupFile = templatePath ? path.resolve(templatePath, "setup.js") : path.resolve(__dirname, 'templates/', type, 'setup.js');
 		let setup = {
 			inquire: () => {},
 			process: () => {}
@@ -171,8 +171,6 @@ program
 					setupContext.dir = dir;
 					setupContext.parentName = parentName;
 					setupContext.declaredType = declaredType;
-
-					await setup.process(sUtils, setupContext);
 				} else {
 					console.log("Directory already exists");
 					process.exit();

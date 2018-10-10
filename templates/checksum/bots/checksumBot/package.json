@@ -1,6 +1,7 @@
 {
 	"name": "____BOTNAME____",
 	"version": "1.0.0",
+	"private": true,
 	"description": "____BOTNAME____",
 	"main": "index.js",
 	"directories": {
