@@ -97,6 +97,7 @@ const progressInterval = {
 			console.log(`Cannot determine base cloudformation from ${process.env.NODE_ENV}.  Cannot create patch.`);
 			process.exit();
 		}
+
 		try {
 			startingCloudformation = await require("leo-aws")(target.leoaws).cloudformation.get(patch.stack, {});
 		} catch (err) {
