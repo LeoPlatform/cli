@@ -12,7 +12,8 @@
 	},
 	"bin": {
 		"leo-cli": "./leo-cli.js",
-		"leo": "./leo-cli.js"
+		"leo": "./leo-cli.js",
+		"leo-cli-debug": "./leo-cli-debug.js"
 	},
 	"dependencies": {
 		"archiver": "^1.0.0",
