@@ -107,91 +107,96 @@ const progressInterval = {
 		}
 	}
 
-	let data = await require("./lib/cloud-formation.js").createCloudFormation(rootDir, {
-		linkedStacks: config.linkedStacks,
-		config: pkgConfig,
-		force: force,
-		targets: publishConfig,
-		filter: filter,
-		alias: process.env.NODE_ENV,
-		publish: program.run || !program.build,
-		tag: program.tag,
-		public: program.public || false,
-		cloudFormationOnly: program.cloudformation,
-		saveCloudFormation: program.save,
-		cloudformation: startingCloudformation
-	});
+	try {
+    let data = await require("./lib/cloud-formation.js").createCloudFormation(rootDir, {
+      linkedStacks: config.linkedStacks,
+      config: pkgConfig,
+      force: force,
+      targets: publishConfig,
+      filter: filter,
+      alias: process.env.NODE_ENV,
+      publish: program.run || !program.build,
+      tag: program.tag,
+      public: program.public || false,
+      cloudFormationOnly: program.cloudformation,
+      saveCloudFormation: program.save,
+      cloudformation: startingCloudformation
+    });
 
-	if (program.run || !program.build) {
-		console.log("\n---------------Publish Complete---------------");
-		data.forEach(publish => {
-			console.log(publish.url + "cloudformation.json")
-		});
-	} else {
-		console.log("\n---------------Build Complete---------------");
-	}
+    if (program.run || !program.build) {
+      console.log("\n---------------Publish Complete---------------");
+      data.forEach(publish => {
+        console.log(publish.url + "cloudformation.json")
+      });
+    } else {
+      console.log("\n---------------Build Complete---------------");
+    }
 
-	if (program.run) {
-		let tasks = [];
-		let devConfig = config.deploy[process.env.NODE_ENV];
-		let deployRegions = devConfig.region || [];
-		if (!Array.isArray(deployRegions)) {
-			deployRegions = [deployRegions];
-		}
-		data.filter(p => deployRegions.length == 0 || deployRegions.indexOf(p.region) >= 0).map(publish => {
-			if (publish == undefined) {
-				console.log(`\n---------------"${process.env.NODE_ENV} ${devConfig.stack} ${publish.region}"---------------`);
-				return;
-			}
+    if (program.run) {
+      let tasks = [];
+      let devConfig = config.deploy[process.env.NODE_ENV];
+      let deployRegions = devConfig.region || [];
+      if (!Array.isArray(deployRegions)) {
+        deployRegions = [deployRegions];
+      }
+      data.filter(p => deployRegions.length == 0 || deployRegions.indexOf(p.region) >= 0).map(publish => {
+        if (publish == undefined) {
+          console.log(`\n---------------"${process.env.NODE_ENV} ${devConfig.stack} ${publish.region}"---------------`);
+          return;
+        }
 
-			let url = publish.url + "cloudformation.json";
-			console.time("Update Complete");
-			console.log(`\n---------------Creating Stack ChangeSet "${process.env.NODE_ENV} ${devConfig.stack} ${publish.region}"---------------`);
-			console.log(`url: ${url}`);
-			progressInterval.start();
+        let url = publish.url + "cloudformation.json";
+        console.time("Update Complete");
+        console.log(`\n---------------Creating Stack ChangeSet "${process.env.NODE_ENV} ${devConfig.stack} ${publish.region}"---------------`);
+        console.log(`url: ${url}`);
+        progressInterval.start();
 
-			let Parameters = [].concat(Object.keys(devConfig.parameters || {}).map(key => {
-				let value = devConfig.parameters[key];
-				let noEcho = false;
-				if (typeof value.NoEcho !== 'undefined') {
-					noEcho = value.NoEcho;
-					value = value.value;
-				}
-				return {
-					ParameterKey: key,
-					ParameterValue: value,
-					NoEcho: noEcho
-				}
-			}));
-			if (pkgConfig.no_env_param !== true) {
-				Parameters.push({
-					ParameterKey: 'Environment',
-					ParameterValue: process.env.NODE_ENV
-				});
-			}
+        let Parameters = [].concat(Object.keys(devConfig.parameters || {}).map(key => {
+          let value = devConfig.parameters[key];
+          let noEcho = false;
+          if (typeof value.NoEcho !== 'undefined') {
+            noEcho = value.NoEcho;
+            value = value.value;
+          }
+          return {
+            ParameterKey: key,
+            ParameterValue: value,
+            NoEcho: noEcho
+          }
+        }));
+        if (pkgConfig.no_env_param !== true) {
+          Parameters.push({
+            ParameterKey: 'Environment',
+            ParameterValue: process.env.NODE_ENV
+          });
+        }
 
-			tasks.push(publish.target.leoaws.cloudformation.runChangeSet(
-				devConfig.stack, url, {
-					Parameters: Parameters
-				}, {
-					forceDeploy: program.forceDeploy,
-					progressInterval: progressInterval
-				}
-			).then(() => {
-				console.log("");
-				console.timeEnd("Update Complete", publish.region);
-			}).catch(err => {
-				console.log(` Update Error: ${publish.region}`, err);
-			}));
-		});
-		Promise.all(tasks).then(() => {
-			progressInterval.stop();
-			tasks.length > 0 && console.log("Ran all deployments");
-			process.exit();
-		}).catch((err) => {
-			progressInterval.stop();
-			tasks.length > 0 && console.log("Failed on deployments", err);
-			process.exit();
-		})
-	}
+        tasks.push(publish.target.leoaws.cloudformation.runChangeSet(
+          devConfig.stack, url, {
+            Parameters: Parameters
+          }, {
+            forceDeploy: program.forceDeploy,
+            progressInterval: progressInterval
+          }
+        ).then(() => {
+          console.log("");
+          console.timeEnd("Update Complete", publish.region);
+        }).catch(err => {
+          console.log(` Update Error: ${publish.region}`, err);
+        }));
+      });
+      Promise.all(tasks).then(() => {
+        progressInterval.stop();
+        tasks.length > 0 && console.log("Ran all deployments");
+        process.exit();
+      }).catch((err) => {
+        progressInterval.stop();
+        tasks.length > 0 && console.log("Failed on deployments", err);
+        process.exit(1);
+      })
+    }
+  } catch (err) {
+		console.log(err);
+    process.exit(1);
+  }
 })();
