@@ -13,5 +13,9 @@
 		"leo": {
 			"type": "microservice"
 		}
+	},
+	"dependencies": {
+		"leo-sdk": ">=2.0.0",
+		"leo-config": ">=1.0.0"
 	}
 }
