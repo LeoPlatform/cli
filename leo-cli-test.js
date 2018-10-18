@@ -13,8 +13,15 @@ program
 	.version('0.0.1')
 	.option("-e, --env [env]", "Environment")
 	.option("--region [region]", "Region to run cloudformation")
+	.option("-w --watch [watch]", "Watch files for changes")
+	.option("-i --inspect-brk [port]", "Debug")
+	.option("--inspect [port]", "Debug")
 	.usage('<dir> [options]')
 	.action(function(dir) {
+		let debugCmd = (program.inspectBrk || program.inspect);
+		if (debugCmd) {
+			debugCmd = [`--inspect${program.inspectBrk?'-brk' : ''}=${(debugCmd === true) ? "9229" : debugCmd}`];
+		}
 		let rootDir = path.resolve(process.cwd(), dir);
 		let watchDir = utils.findFirstPackageValue(rootDir, ["microservice"], "__directory");
 		var pkg = require(path.resolve(rootDir, "package.json"));
@@ -32,24 +39,39 @@ program
 		} else {
 			let child = null;
 
-			function run() {
+			let envVariables = {
+				NODE_ENV: program.env || "dev",
+				LEO_LOCAL: "true",
+				LEO_ENV: program.env || "dev",
+				LEO_REGION: program.region,
+				LEO_CONFIG: JSON.stringify(c),
+				LEO_PREVENT_RUN_AGAIN: "true",
+				leo_config_bootstrap_path: path.resolve(c._meta.microserviceDir, "leo_config.js"),
+				LEO_RUNNER_EXIT_ON_COMPLETE: (program.watch && !debugCmd) ? "false" : "true" // Don't exit if we are watching an on the same process
+			};
+
+			function runInSameProcess() {
+				Object.keys(require.cache).map(k => {
+					delete require.cache[k]
+				});
+				Object.entries(envVariables).map(([key, value]) => process.env[key] = value);
+				require(__dirname + "/lib/runner.js");
+			}
+
+			function runInChildProcess() {
 				function f() {
 					child = fork(__dirname + "/lib/runner.js", process.argv, {
 						cwd: rootDir,
-						env: Object.assign({}, process.env, {
-							NODE_ENV: program.env || "dev",
-							LEO_LOCAL: "true",
-							LEO_ENV: program.env || "dev",
-							LEO_REGION: program.region,
-							LEO_CONFIG: JSON.stringify(c),
-							LEO_PREVENT_RUN_AGAIN: "true",
-							leo_config_bootstrap_path: path.resolve(c._meta.microserviceDir, "leo_config.js")
-						}),
-						//execArgv: ["--inspect", "--debug-brk"]
+						env: Object.assign({}, process.env, envVariables),
+						execArgv: debugCmd || []
 					});
-					//process.kill(child.pid, 'USR1');
 					child.once("exit", () => {
 						child = null;
+						if (!program.watch) {
+							watcher && watcher.close();
+							watcher = null;
+							process.exit();
+						}
 					});
 				}
 				if (child) {
@@ -64,22 +86,26 @@ program
 					console.log("closing child process.  Ctrl-c again to cancel test");
 					child.kill();
 				} else {
-					watcher.close();
+					watcher && watcher.close();
+					watcher = null;
 					process.exit();
 				}
 			});
 
+			let run = debugCmd ? runInChildProcess : runInSameProcess;
 			run();
-			let watchDirs = (watchDir ? [watchDir] : []).concat(pkg.config.test ? pkg.config.test.watch : []);
-			var watcher = watch(watchDirs, {
-				recursive: true,
-				filter: (f) => {
-					return !/node_modules/.test(f)
-				}
-			}, (eventType, filename) => {
-				console.log("new file");
-				run();
-			});
+			if (program.watch) {
+				let watchDirs = (watchDir ? [watchDir] : []).concat(pkg.config.test ? pkg.config.test.watch : []);
+				var watcher = watch(watchDirs, {
+					recursive: true,
+					filter: (f) => {
+						return !/node_modules/.test(f)
+					}
+				}, (eventType, filename) => {
+					console.log("new file");
+					run();
+				});
+			}
 		}
 	})
 	.parse(process.argv);
