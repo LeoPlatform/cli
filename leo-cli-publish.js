@@ -16,7 +16,7 @@ program
 	.option("--public [public]", "Publish as public")
 	.option("-s --save [save]", "Save the cloudformation.json to the microservice directory")
 	.option('-F --force-deploy', 'Automatically deploy without requesting verification of changeset')
-	.option("-p --patch [patch]", "Patch from existing environment's deployed cloudformation.")
+	.option("-p --patch [env]", "Patch from existing environment's deployed cloudformation.")
 	.arguments('[directory] [options]')
 	.usage('[directory] [options]');
 
