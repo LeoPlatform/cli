@@ -25,7 +25,7 @@ const progressInterval = {
 	start: () => {
 		this.interval = setInterval(() => {
 			process.stdout.write(".")
-		}, 2000);
+		}, 20000);
 	},
 	stop: () => {
 		clearInterval(this.interval);
