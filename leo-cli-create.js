@@ -233,6 +233,8 @@ program
 		console.log("\tleo-cli create offload MyOffloadBot");
 		console.log("\tleo-cli create cron MyCronBot");
 		console.log("\tleo-cli create leo-connector-mysql listener MySqlListener");
+		console.log("\tleo-cli create aggregations .");
+		console.log("\t\tMust be run within the microservice directory");
 
 		console.log("\nMicroservice Examples:");
 		console.log("\tleo-cli create microservice MyService");
