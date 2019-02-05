@@ -24,7 +24,6 @@ module.exports = (data) => {
 		length: () => logins.length,
 		get: (event) => {
 			return logins.reduce((acc, login) => {
-				console.log(login)
 				acc[login.key] = login.handler(event);
 				return acc;
 			}, {})

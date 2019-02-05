@@ -17,6 +17,7 @@ program
 	.option("-s --save [save]", "Save the cloudformation.json to the microservice directory")
 	.option('-F --force-deploy', 'Automatically deploy without requesting verification of changeset')
 	.option("-p --patch [env]", "Patch from existing environment's deployed cloudformation.")
+	.option("-m --merge", "Merge build from existing environment's deployed cloudformation.")
 	.arguments('[directory] [options]')
 	.usage('[directory] [options]');
 
@@ -106,6 +107,28 @@ const progressInterval = {
 			process.exit();
 		}
 	}
+	let mergeBase = [];
+	if (program.merge) {
+		config.publish.map(target => {
+			Object.keys(config.deploy || {}).map(deployEnv => {
+				deployConfig = config.deploy[deployEnv];
+				let deployRegions = deployConfig.region || [];
+				if (!Array.isArray(deployRegions)) {
+					deployRegions = [deployRegions];
+				}
+				if (deployRegions.length == 0 || deployRegions.indexOf(target.leoaws.region) >= 0) {
+					mergeBase.push(require("leo-aws")(target.leoaws).cloudformation.get(deployConfig.stack, {}).then(template => {
+						return {
+							name: `${deployConfig.stack}-${target.leoaws.region}.patch`,
+							template: template
+						}
+					}).catch(err => console.log(err)));
+
+				}
+			})
+		})
+	}
+	mergeBase = (await Promise.all(mergeBase)).filter(cf => !!cf);
 
 	try {
 		let data = await require("./lib/cloud-formation.js").createCloudFormation(rootDir, {
@@ -120,7 +143,8 @@ const progressInterval = {
 			public: program.public || false,
 			cloudFormationOnly: program.cloudformation,
 			saveCloudFormation: program.save,
-			cloudformation: startingCloudformation
+			cloudformation: startingCloudformation,
+			variations: mergeBase
 		});
 
 		if (program.run || !program.build) {
@@ -131,7 +155,7 @@ const progressInterval = {
 		} else {
 			console.log("\n---------------Build Complete---------------");
 		}
-		if (!program.run){
+		if (!program.run) {
 			// Nothing more to do
 			process.exit();
 		} else {
@@ -141,6 +165,7 @@ const progressInterval = {
 			if (!Array.isArray(deployRegions)) {
 				deployRegions = [deployRegions];
 			}
+			let deployErrors = 0;
 			data.filter(p => deployRegions.length == 0 || deployRegions.indexOf(p.region) >= 0).map(publish => {
 				if (publish == undefined) {
 					console.log(`\n---------------"${process.env.NODE_ENV} ${devConfig.stack} ${publish.region}"---------------`);
@@ -185,9 +210,13 @@ const progressInterval = {
 					console.timeEnd("Update Complete", publish.region);
 				}).catch(err => {
 					console.log(` Update Error: ${publish.region}`, err);
+					deployErrors++;
 				}));
 			});
 			Promise.all(tasks).then(() => {
+				if (deployErrors > 0) {
+					throw new Error(`Deployment errors, see log for details.`);
+				}
 				progressInterval.stop();
 				tasks.length > 0 && console.log("Ran all deployments");
 				process.exit();
@@ -196,7 +225,7 @@ const progressInterval = {
 				tasks.length > 0 && console.log("Failed on deployments", err);
 				process.exit(1);
 			});
-		} 
+		}
 	} catch (err) {
 		console.log(err);
 		process.exit(1);
