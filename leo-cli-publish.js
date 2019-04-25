@@ -150,7 +150,7 @@ const progressInterval = {
 		if (program.run || !program.build) {
 			console.log("\n---------------Publish Complete---------------");
 			data.forEach(publish => {
-				console.log(publish.url + "cloudformation.json");
+				console.log(publish.url + `cloudformation${publish.version ? ("-" + publish.version): ""}.json`);
 			});
 		} else {
 			console.log("\n---------------Build Complete---------------");
