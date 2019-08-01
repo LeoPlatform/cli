@@ -52,7 +52,7 @@
 		"leo-sdk": "^3.0.1",
 		"less": "^3.9.0",
 		"less-loader": "^5.0.0",
-		"lodash.merge": "^4.6.1",
+		"lodash.merge": "^4.6.2",
 		"mocha": "^6.1.4",
 		"moment": "^2.24.0",
 		"node-watch": "^0.6.2",
