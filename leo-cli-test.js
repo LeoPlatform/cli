@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-var path = require('path');
-var program = require('commander');
-var colors = require('colors');
+const path = require('path');
+const program = require('commander');
+const colors = require('colors');
 
 const utils = require("./lib/utils.js");
 
@@ -11,26 +11,28 @@ const fork = require("child_process").fork;
 
 program
 	.version('0.0.1')
+	.command('test [dir]')
 	.option("-e, --env [env]", "Environment")
 	.option("--region [region]", "Region to run cloudformation")
 	.option("-w --watch [watch]", "Watch files for changes")
 	.option("-i --inspect-brk [port]", "Debug")
 	.option("--inspect [port]", "Debug")
 	.usage('<dir> [options]')
-	.action(function(dir) {
+	.action(dir => {
 		let debugCmd = (program.inspectBrk || program.inspect);
 		if (debugCmd) {
 			debugCmd = [`--inspect${program.inspectBrk?'-brk' : ''}=${(debugCmd === true) ? "9229" : debugCmd}`];
 		}
-		let rootDir = path.resolve(process.cwd(), dir);
-		let watchDir = utils.findFirstPackageValue(rootDir, ["microservice"], "__directory");
-		var pkg = require(path.resolve(rootDir, "package.json"));
 
-		var reactRunner = require("./lib/react.js");
+		const rootDir = path.resolve(process.cwd(), dir);
+		const watchDir = utils.findFirstPackageValue(rootDir, ["microservice"], "__directory");
+		const pkg = require(path.resolve(rootDir, "package.json"));
 
-		var buildConfig = require("./lib/build-config").build;
+		const reactRunner = require("./lib/react.js");
 
-		let c = buildConfig(rootDir);
+		const buildConfig = require("./lib/build-config").build;
+
+		const c = buildConfig(rootDir);
 		if (pkg.config && pkg.config.leo && pkg.config.leo.type == "microservice") {
 			process.env.leo_config_bootstrap_path = path.resolve(c._meta.microserviceDir, "leo_config.js");
 			process.env.NODE_ENV = program.env || "dev";
@@ -39,7 +41,7 @@ program
 		} else {
 			let child = null;
 
-			let envVariables = {
+			const envVariables = {
 				NODE_ENV: program.env || "dev",
 				LEO_LOCAL: "true",
 				LEO_ENV: program.env || "dev",
@@ -101,7 +103,7 @@ program
 					filter: (f) => {
 						return !/node_modules/.test(f)
 					}
-				}, (eventType, filename) => {
+				}, () => {
 					console.log("new file");
 					run();
 				});
