@@ -4,7 +4,8 @@
 		"Code": {
 			"S3Bucket": {
 				"Fn::FindInMap": [
-					"RegionMap", {
+					"RegionMap",
+					{
 						"Ref": "AWS::Region"
 					},
 					"S3Bucket"
@@ -20,7 +21,7 @@
 			}
 		},
 		"MemorySize": 256,
-		"Runtime": "nodejs10.x",
+		"Runtime": "nodejs12.x",
 		"Timeout": 60,
 		"Role": {
 			"Fn::Sub": "${ApiRole.Arn}"
