@@ -150,7 +150,7 @@ const progressInterval = {
 		if (program.run || !program.build) {
 			console.log("\n---------------Publish Complete---------------");
 			data.forEach(publish => {
-				console.log(publish.url + `cloudformation${publish.version ? ("-" + publish.version): ""}.json`);
+				console.log(publish.url + `cloudformation${publish.version ? ("-" + publish.version) : ""}.json`);
 			});
 		} else {
 			console.log("\n---------------Build Complete---------------");
@@ -200,11 +200,11 @@ const progressInterval = {
 
 				tasks.push(publish.target.leoaws.cloudformation.runChangeSet(
 					devConfig.stack, url, {
-						Parameters: Parameters
-					}, {
-						forceDeploy: program.forceDeploy,
-						progressInterval: progressInterval
-					}
+					Parameters: Parameters
+				}, {
+					forceDeploy: program.forceDeploy,
+					progressInterval: progressInterval
+				}
 				).then(() => {
 					console.log("");
 					console.timeEnd("Update Complete", publish.region);

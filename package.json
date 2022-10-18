@@ -1,6 +1,6 @@
 {
 	"name": "leo-cli",
-	"version": "3.0.2",
+	"version": "3.0.3",
 	"description": "A Nodejs interface to interact with the Leo SDK and AWS",
 	"repository": {
 		"type": "git",
@@ -16,7 +16,7 @@
 		"leo-cli-debug": "./leo-cli-debug.js"
 	},
 	"dependencies": {
-		"archiver": "^1.0.0",
+		"archiver": "^5.3.1",
 		"async": "^3.0.1",
 		"aws-sdk": "^2.466.0",
 		"babel-core": "^6.26.3",
@@ -35,7 +35,7 @@
 		"extract-text-webpack-plugin": "^4.0.0-beta.0",
 		"file-loader": "^3.0.1",
 		"glob": "^7.1.4",
-		"gulp": "^4.0.0",
+		"gulp": "^4.0.2",
 		"gulp-batch": "^1.0.5",
 		"gulp-concat": "^2.6.1",
 		"gulp-ejs": "^3.1.3",
