@@ -46,7 +46,7 @@
 		"gulp-uglify": "^3.0.0",
 		"gulp-util": "^3.0.8",
 		"html-webpack-plugin": "^3.2.0",
-		"js-beautify": "^1.10.0",
+		"js-beautify": "^1.14.11",
 		"json-loader": "^0.5.7",
 		"leo-aws": "^1.4.4",
 		"leo-sdk": "^3.1.3",
