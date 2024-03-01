@@ -16,7 +16,7 @@
 		"leo-cli-debug": "./leo-cli-debug.js"
 	},
 	"dependencies": {
-		"archiver": "^5.3.1",
+		"archiver": "^7.0.0",
 		"async": "^3.0.1",
 		"aws-sdk": "^2.466.0",
 		"babel-core": "^6.26.3",
