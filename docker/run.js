@@ -140,7 +140,6 @@ async function buildEvent() {
 			timeout: 5000,
 			agent: new https.Agent({
 				ciphers: 'ALL',
-				secureProtocol: 'TLSv1_method'
 			})
 		}
 	});

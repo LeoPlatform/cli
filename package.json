@@ -1,6 +1,6 @@
 {
 	"name": "leo-cli",
-	"version": "3.0.3",
+	"version": "3.0.3-beta",
 	"description": "A Nodejs interface to interact with the Leo SDK and AWS",
 	"repository": {
 		"type": "git",
@@ -20,7 +20,7 @@
 		"async": "^3.0.1",
 		"aws-sdk": "^2.466.0",
 		"babel-core": "^6.26.3",
-		"babel-loader": "^7.1.4",
+		"babel-loader": "^6.4.1",
 		"babel-preset-env": "^1.7.0",
 		"babel-register": "^6.26.0",
 		"babelify": "^8.0.0",
