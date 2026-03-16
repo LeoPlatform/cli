@@ -49,8 +49,15 @@ async function handler() {
 			params: { RoleArn: role }
 		});
 
-		// Wait for credentials to resolve, then proceed
-		roleCredentials().then(() => {
+		// Resolve the assumed-role credentials and export them as env vars
+		// so any SDK clients created by the handler pick them up via the default credential chain
+		roleCredentials().then(resolvedCreds => {
+			process.env.AWS_ACCESS_KEY_ID = resolvedCreds.accessKeyId;
+			process.env.AWS_SECRET_ACCESS_KEY = resolvedCreds.secretAccessKey;
+			if (resolvedCreds.sessionToken) {
+				process.env.AWS_SESSION_TOKEN = resolvedCreds.sessionToken;
+			}
+
 			// Set all Environment for the lambda.  should this be done on container invoke?
 			Object.keys(functionData.Configuration.Environment.Variables).map(key => {
 				process.env[key] = functionData.Configuration.Environment.Variables[key];
