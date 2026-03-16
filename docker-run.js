@@ -20,7 +20,10 @@ let https = require("https");
 let zlib = require("zlib");
 let fs = require("fs");
 let path = require("path");
-let aws = require("aws-sdk");
+const { LambdaClient, GetFunctionCommand } = require("@aws-sdk/client-lambda");
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, ScanCommand, GetCommand } = require("@aws-sdk/lib-dynamodb");
+const { fromTemporaryCredentials } = require("@aws-sdk/credential-providers");
 
 handler();
 async function handler() {
@@ -29,36 +32,25 @@ async function handler() {
 	let FunctionName = process.env.AWS_LAMBDA_FUNCTION_NAME;
 
 
-	let lambda = new aws.Lambda({
+	let lambda = new LambdaClient({
 		region: process.env.AWS_REGION
 	});
 
-	var sts = new aws.STS({
-		region: process.env.AWS_REGION
-	});
-
-	lambda.getFunction({
+	lambda.send(new GetFunctionCommand({
 		FunctionName: FunctionName
-	}, (err, functionData) => {
-		if (err) {
-			console.log(`Cannot fund function: ${FunctionName}`, err);
-			process.exit();
-		}
+	})).then(functionData => {
 		functionData.Configuration.Timeout *= 10;
 
 		//console.log(JSON.stringify(functionData, null, 2))
 
 		// Assume the lambda's role
 		let role = functionData.Configuration.Role;
-		aws.config.credentials = new aws.TemporaryCredentials({
-			RoleArn: role
+		let roleCredentials = fromTemporaryCredentials({
+			params: { RoleArn: role }
 		});
-		aws.config.credentials.get(function(err, roleData) {
-			if (err) {
-				console.log("Cannot assume role", err);
-				process.exit();
-			}
 
+		// Wait for credentials to resolve, then proceed
+		roleCredentials().then(() => {
 			// Set all Environment for the lambda.  should this be done on container invoke?
 			Object.keys(functionData.Configuration.Environment.Variables).map(key => {
 				process.env[key] = functionData.Configuration.Environment.Variables[key];
@@ -72,7 +64,7 @@ async function handler() {
 			}, (err, data) => {
 				if (err) {
 					console.log(err);
-					return callback(err);
+					process.exit(1);
 				}
 				let context = createContext(data.Configuration || {});
 				let handler = data.module[data.handler || "handler"];
@@ -81,9 +73,15 @@ async function handler() {
 					process.exit();
 				});
 			});
-
+		}).catch(err => {
+			console.log("Cannot assume role", err);
+			process.exit();
 		});
+	}).catch(err => {
+		console.log(`Cannot fund function: ${FunctionName}`, err);
+		process.exit();
 	});
+
 	let importModule = function(url, data, callback) {
 		data = Object.assign({
 			main: "index.js",
@@ -126,17 +124,19 @@ async function buildEvent() {
 		return event;
 	}
 
-	var docClient = new aws.DynamoDB.DocumentClient({
+	let ddbClient = new DynamoDBClient({
 		region: process.env.AWS_REGION,
-		maxRetries: 2,
-		convertEmptyValues: true,
-		httpOptions: {
-			connectTimeout: 2000,
-			timeout: 5000,
-			agent: new https.Agent({
+		maxAttempts: 2,
+		requestHandler: {
+			httpsAgent: new https.Agent({
 				ciphers: 'ALL',
-			})
+			}),
+			connectionTimeout: 2000,
+			requestTimeout: 5000
 		}
+	});
+	var docClient = DynamoDBDocumentClient.from(ddbClient, {
+		marshallOptions: { convertEmptyValues: true }
 	});
 
 	let id = process.env.BOT;
@@ -144,32 +144,25 @@ async function buildEvent() {
 	let entry;
 	if (!id) {
 		// Scan table for lambda name;
-		entry = await new Promise((resolve, reject) => docClient.scan({
-			Key: {
-				id: id
-			},
+		let result = await docClient.send(new ScanCommand({
 			TableName: process.env.LEO_CRON,
 			FilterExpression: "lambdaName = :value",
 			ExpressionAttributeValues: {
 				":value": lambdaName
 			}
-		}, (err, data) => {
-			if (err) reject(err);
-			else resolve(data.Items[0]);
-		}))
+		}));
+		entry = result.Items[0];
 		id = entry.id;
 	}
 	if (!lambdaName) {
 		// Lookup lambda name
-		entry = await new Promise((resolve, reject) => docClient.get({
+		let result = await docClient.send(new GetCommand({
 			Key: {
 				id: id
 			},
 			TableName: process.env.LEO_CRON
-		}, (err, data) => {
-			if (err) reject(err);
-			else resolve(data.Item);
 		}));
+		entry = result.Item;
 		lambdaName = entry.lambdaName;
 	}
 
