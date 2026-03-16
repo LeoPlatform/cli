@@ -23,8 +23,9 @@ let path = require("path");
 const { LambdaClient, GetFunctionCommand } = require("@aws-sdk/client-lambda");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, ScanCommand, GetCommand } = require("@aws-sdk/lib-dynamodb");
+const { NodeHttpHandler } = require("@smithy/node-http-handler");
 
-handler();
+handler().catch(err => { console.error(err); process.exit(1); });
 async function handler() {
 	let event = await buildEvent();
 	process.env.AWS_LAMBDA_FUNCTION_NAME = process.env.AWS_LAMBDA_FUNCTION_NAME || event.__cron.name;
@@ -36,9 +37,11 @@ async function handler() {
 		region: process.env.AWS_REGION
 	});
 
-	lambda.send(new GetFunctionCommand({
-		FunctionName: FunctionName
-	})).then(functionData => {
+	try {
+		let functionData = await lambda.send(new GetFunctionCommand({
+			FunctionName: FunctionName
+		}));
+
 		if (process.env.TIMEOUT || process.env.AWS_LAMBDA_FUNCTION_TIMEOUT) {
 			functionData.Configuration.Timeout = parseInt(process.env.AWS_LAMBDA_FUNCTION_TIMEOUT || process.env.TIMEOUT);
 		} else {
@@ -85,10 +88,10 @@ async function handler() {
 			});
 			// });
 		});
-	}).catch(err => {
-		console.log(`Cannot fund function: ${FunctionName}`, err);
-		process.exit();
-	});
+	} catch (err) {
+		console.log(`Cannot find function: ${FunctionName}`, err);
+		process.exit(1);
+	}
 
 	let importModule = function(url, data, callback) {
 		data = Object.assign({
@@ -137,13 +140,11 @@ async function buildEvent() {
 	let ddbClient = new DynamoDBClient({
 		region: process.env.AWS_REGION,
 		maxAttempts: 2,
-		requestHandler: {
-			httpsAgent: new https.Agent({
-				ciphers: 'ALL',
-			}),
+		requestHandler: new NodeHttpHandler({
+			httpsAgent: new https.Agent({ ciphers: 'ALL' }),
 			connectionTimeout: 2000,
 			requestTimeout: 5000
-		}
+		})
 	});
 	var docClient = DynamoDBDocumentClient.from(ddbClient, {
 		marshallOptions: { convertEmptyValues: true }
@@ -161,6 +162,9 @@ async function buildEvent() {
 				":value": lambdaName
 			}
 		}));
+		if (!result.Items || !result.Items.length) {
+			throw new Error(`No bot found with lambdaName: ${lambdaName}`);
+		}
 		entry = result.Items[0];
 		id = entry.id;
 	}
@@ -172,6 +176,9 @@ async function buildEvent() {
 			},
 			TableName: process.env.LEO_CRON
 		}));
+		if (!result.Item) {
+			throw new Error(`No bot found with id: ${id}`);
+		}
 		entry = result.Item;
 		lambdaName = entry.lambdaName;
 	}

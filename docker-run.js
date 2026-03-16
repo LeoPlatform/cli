@@ -24,8 +24,9 @@ const { LambdaClient, GetFunctionCommand } = require("@aws-sdk/client-lambda");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, ScanCommand, GetCommand } = require("@aws-sdk/lib-dynamodb");
 const { fromTemporaryCredentials } = require("@aws-sdk/credential-providers");
+const { NodeHttpHandler } = require("@smithy/node-http-handler");
 
-handler();
+handler().catch(err => { console.error(err); process.exit(1); });
 async function handler() {
 	let event = await buildEvent();
 	process.env.AWS_LAMBDA_FUNCTION_NAME = process.env.AWS_LAMBDA_FUNCTION_NAME || event.__cron.name;
@@ -36,9 +37,11 @@ async function handler() {
 		region: process.env.AWS_REGION
 	});
 
-	lambda.send(new GetFunctionCommand({
-		FunctionName: FunctionName
-	})).then(functionData => {
+	try {
+		let functionData = await lambda.send(new GetFunctionCommand({
+			FunctionName: FunctionName
+		}));
+
 		functionData.Configuration.Timeout *= 10;
 
 		//console.log(JSON.stringify(functionData, null, 2))
@@ -49,45 +52,50 @@ async function handler() {
 			params: { RoleArn: role }
 		});
 
-		// Resolve the assumed-role credentials and export them as env vars
-		// so any SDK clients created by the handler pick them up via the default credential chain
-		roleCredentials().then(resolvedCreds => {
-			process.env.AWS_ACCESS_KEY_ID = resolvedCreds.accessKeyId;
-			process.env.AWS_SECRET_ACCESS_KEY = resolvedCreds.secretAccessKey;
-			if (resolvedCreds.sessionToken) {
-				process.env.AWS_SESSION_TOKEN = resolvedCreds.sessionToken;
-			}
-
-			// Set all Environment for the lambda.  should this be done on container invoke?
-			Object.keys(functionData.Configuration.Environment.Variables).map(key => {
-				process.env[key] = functionData.Configuration.Environment.Variables[key];
-			});
-
-			importModule(functionData.Code.Location, {
-				main: `${functionData.Configuration.Handler.split(".")[0]}.js`,
-				handler: functionData.Configuration.Handler.split(".")[1],
-				lastModified: functionData.Configuration.LastModified,
-				Configuration: functionData.Configuration
-			}, (err, data) => {
-				if (err) {
-					console.log(err);
-					process.exit(1);
-				}
-				let context = createContext(data.Configuration || {});
-				let handler = data.module[data.handler || "handler"];
-				handler(event, context, (err, data) => {
-					console.log("All Done", err, data);
-					process.exit();
-				});
-			});
-		}).catch(err => {
+		let resolvedCreds;
+		try {
+			// Resolve the assumed-role credentials and export them as env vars
+			// so any SDK clients created by the handler pick them up via the default credential chain
+			resolvedCreds = await roleCredentials();
+		} catch (err) {
 			console.log("Cannot assume role", err);
-			process.exit();
+			process.exit(1);
+		}
+
+		// Set Lambda env vars first, then override with assumed-role credentials.
+		// Lambda env vars may contain stale AWS_ACCESS_KEY_ID/etc from the function config;
+		// the assumed-role creds must take precedence.
+		Object.keys(functionData.Configuration.Environment.Variables).map(key => {
+			process.env[key] = functionData.Configuration.Environment.Variables[key];
 		});
-	}).catch(err => {
-		console.log(`Cannot fund function: ${FunctionName}`, err);
-		process.exit();
-	});
+
+		process.env.AWS_ACCESS_KEY_ID = resolvedCreds.accessKeyId;
+		process.env.AWS_SECRET_ACCESS_KEY = resolvedCreds.secretAccessKey;
+		if (resolvedCreds.sessionToken) {
+			process.env.AWS_SESSION_TOKEN = resolvedCreds.sessionToken;
+		}
+
+		importModule(functionData.Code.Location, {
+			main: `${functionData.Configuration.Handler.split(".")[0]}.js`,
+			handler: functionData.Configuration.Handler.split(".")[1],
+			lastModified: functionData.Configuration.LastModified,
+			Configuration: functionData.Configuration
+		}, (err, data) => {
+			if (err) {
+				console.log(err);
+				process.exit(1);
+			}
+			let context = createContext(data.Configuration || {});
+			let handler = data.module[data.handler || "handler"];
+			handler(event, context, (err, data) => {
+				console.log("All Done", err, data);
+				process.exit();
+			});
+		});
+	} catch (err) {
+		console.log(`Cannot find function: ${FunctionName}`, err);
+		process.exit(1);
+	}
 
 	let importModule = function(url, data, callback) {
 		data = Object.assign({
@@ -134,13 +142,11 @@ async function buildEvent() {
 	let ddbClient = new DynamoDBClient({
 		region: process.env.AWS_REGION,
 		maxAttempts: 2,
-		requestHandler: {
-			httpsAgent: new https.Agent({
-				ciphers: 'ALL',
-			}),
+		requestHandler: new NodeHttpHandler({
+			httpsAgent: new https.Agent({ ciphers: 'ALL' }),
 			connectionTimeout: 2000,
 			requestTimeout: 5000
-		}
+		})
 	});
 	var docClient = DynamoDBDocumentClient.from(ddbClient, {
 		marshallOptions: { convertEmptyValues: true }
@@ -158,6 +164,9 @@ async function buildEvent() {
 				":value": lambdaName
 			}
 		}));
+		if (!result.Items || !result.Items.length) {
+			throw new Error(`No bot found with lambdaName: ${lambdaName}`);
+		}
 		entry = result.Items[0];
 		id = entry.id;
 	}
@@ -169,6 +178,9 @@ async function buildEvent() {
 			},
 			TableName: process.env.LEO_CRON
 		}));
+		if (!result.Item) {
+			throw new Error(`No bot found with id: ${id}`);
+		}
 		entry = result.Item;
 		lambdaName = entry.lambdaName;
 	}
