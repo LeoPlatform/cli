@@ -73,6 +73,8 @@ async function handler() {
 		process.env.AWS_SECRET_ACCESS_KEY = resolvedCreds.secretAccessKey;
 		if (resolvedCreds.sessionToken) {
 			process.env.AWS_SESSION_TOKEN = resolvedCreds.sessionToken;
+		} else {
+			delete process.env.AWS_SESSION_TOKEN;
 		}
 
 		importModule(functionData.Code.Location, {
