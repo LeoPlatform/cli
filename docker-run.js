@@ -97,7 +97,7 @@ async function handler() {
 		process.exit(1);
 	}
 
-	let importModule = function(url, data, callback) {
+	function importModule(url, data, callback) {
 		data = Object.assign({
 			main: "index.js",
 			index: "handler"
