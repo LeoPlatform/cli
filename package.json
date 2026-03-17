@@ -1,6 +1,6 @@
 {
 	"name": "leo-cli",
-	"version": "3.0.3-beta",
+	"version": "4.0.0-awsv3",
 	"description": "A Nodejs interface to interact with the Leo SDK and AWS",
 	"repository": {
 		"type": "git",
@@ -16,9 +16,16 @@
 		"leo-cli-debug": "./leo-cli-debug.js"
 	},
 	"dependencies": {
+		"@aws-sdk/client-dynamodb": "^3.1010.0",
+		"@aws-sdk/client-lambda": "^3.1010.0",
+		"@aws-sdk/client-s3": "^3.1010.0",
+		"@aws-sdk/client-sts": "^3.1010.0",
+		"@aws-sdk/credential-providers": "^3.1010.0",
+		"@aws-sdk/lib-dynamodb": "^3.1010.0",
+		"@aws-sdk/s3-request-presigner": "^3.1010.0",
+		"@smithy/node-http-handler": "^4.5.0",
 		"archiver": "^5.3.1",
 		"async": "^3.0.1",
-		"aws-sdk": "^2.466.0",
 		"babel-core": "^6.26.3",
 		"babel-loader": "^6.4.1",
 		"babel-preset-env": "^1.7.0",

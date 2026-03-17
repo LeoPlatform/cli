@@ -20,71 +20,86 @@ let https = require("https");
 let zlib = require("zlib");
 let fs = require("fs");
 let path = require("path");
-let aws = require("aws-sdk");
+const { LambdaClient, GetFunctionCommand } = require("@aws-sdk/client-lambda");
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, ScanCommand, GetCommand } = require("@aws-sdk/lib-dynamodb");
+const { fromTemporaryCredentials } = require("@aws-sdk/credential-providers");
+const { NodeHttpHandler } = require("@smithy/node-http-handler");
 
-handler();
+handler().catch(err => { console.error(err); process.exit(1); });
 async function handler() {
 	let event = await buildEvent();
 	process.env.AWS_LAMBDA_FUNCTION_NAME = process.env.AWS_LAMBDA_FUNCTION_NAME || event.__cron.name;
 	let FunctionName = process.env.AWS_LAMBDA_FUNCTION_NAME;
 
 
-	let lambda = new aws.Lambda({
+	let lambda = new LambdaClient({
 		region: process.env.AWS_REGION
 	});
 
-	var sts = new aws.STS({
-		region: process.env.AWS_REGION
-	});
+	try {
+		let functionData = await lambda.send(new GetFunctionCommand({
+			FunctionName: FunctionName
+		}));
 
-	lambda.getFunction({
-		FunctionName: FunctionName
-	}, (err, functionData) => {
-		if (err) {
-			console.log(`Cannot fund function: ${FunctionName}`, err);
-			process.exit();
-		}
 		functionData.Configuration.Timeout *= 10;
 
 		//console.log(JSON.stringify(functionData, null, 2))
 
 		// Assume the lambda's role
 		let role = functionData.Configuration.Role;
-		aws.config.credentials = new aws.TemporaryCredentials({
-			RoleArn: role
+		let roleCredentials = fromTemporaryCredentials({
+			params: { RoleArn: role }
 		});
-		aws.config.credentials.get(function(err, roleData) {
+
+		let resolvedCreds;
+		try {
+			// Resolve the assumed-role credentials and export them as env vars
+			// so any SDK clients created by the handler pick them up via the default credential chain
+			resolvedCreds = await roleCredentials();
+		} catch (err) {
+			console.log("Cannot assume role", err);
+			process.exit(1);
+		}
+
+		// Set Lambda env vars first, then override with assumed-role credentials.
+		// Lambda env vars may contain stale AWS_ACCESS_KEY_ID/etc from the function config;
+		// the assumed-role creds must take precedence.
+		Object.keys(functionData.Configuration.Environment.Variables).map(key => {
+			process.env[key] = functionData.Configuration.Environment.Variables[key];
+		});
+
+		process.env.AWS_ACCESS_KEY_ID = resolvedCreds.accessKeyId;
+		process.env.AWS_SECRET_ACCESS_KEY = resolvedCreds.secretAccessKey;
+		if (resolvedCreds.sessionToken) {
+			process.env.AWS_SESSION_TOKEN = resolvedCreds.sessionToken;
+		} else {
+			delete process.env.AWS_SESSION_TOKEN;
+		}
+
+		importModule(functionData.Code.Location, {
+			main: `${functionData.Configuration.Handler.split(".")[0]}.js`,
+			handler: functionData.Configuration.Handler.split(".")[1],
+			lastModified: functionData.Configuration.LastModified,
+			Configuration: functionData.Configuration
+		}, (err, data) => {
 			if (err) {
-				console.log("Cannot assume role", err);
-				process.exit();
+				console.log(err);
+				process.exit(1);
 			}
-
-			// Set all Environment for the lambda.  should this be done on container invoke?
-			Object.keys(functionData.Configuration.Environment.Variables).map(key => {
-				process.env[key] = functionData.Configuration.Environment.Variables[key];
+			let context = createContext(data.Configuration || {});
+			let handler = data.module[data.handler || "handler"];
+			handler(event, context, (err, data) => {
+				console.log("All Done", err, data);
+				process.exit();
 			});
-
-			importModule(functionData.Code.Location, {
-				main: `${functionData.Configuration.Handler.split(".")[0]}.js`,
-				handler: functionData.Configuration.Handler.split(".")[1],
-				lastModified: functionData.Configuration.LastModified,
-				Configuration: functionData.Configuration
-			}, (err, data) => {
-				if (err) {
-					console.log(err);
-					return callback(err);
-				}
-				let context = createContext(data.Configuration || {});
-				let handler = data.module[data.handler || "handler"];
-				handler(event, context, (err, data) => {
-					console.log("All Done", err, data);
-					process.exit();
-				});
-			});
-
 		});
-	});
-	let importModule = function(url, data, callback) {
+	} catch (err) {
+		console.log(`Cannot find function: ${FunctionName}`, err);
+		process.exit(1);
+	}
+
+	function importModule(url, data, callback) {
 		data = Object.assign({
 			main: "index.js",
 			index: "handler"
@@ -126,17 +141,17 @@ async function buildEvent() {
 		return event;
 	}
 
-	var docClient = new aws.DynamoDB.DocumentClient({
+	let ddbClient = new DynamoDBClient({
 		region: process.env.AWS_REGION,
-		maxRetries: 2,
-		convertEmptyValues: true,
-		httpOptions: {
-			connectTimeout: 2000,
-			timeout: 5000,
-			agent: new https.Agent({
-				ciphers: 'ALL',
-			})
-		}
+		maxAttempts: 2,
+		requestHandler: new NodeHttpHandler({
+			httpsAgent: new https.Agent({ ciphers: 'ALL' }),
+			connectionTimeout: 2000,
+			requestTimeout: 5000
+		})
+	});
+	var docClient = DynamoDBDocumentClient.from(ddbClient, {
+		marshallOptions: { convertEmptyValues: true }
 	});
 
 	let id = process.env.BOT;
@@ -144,32 +159,31 @@ async function buildEvent() {
 	let entry;
 	if (!id) {
 		// Scan table for lambda name;
-		entry = await new Promise((resolve, reject) => docClient.scan({
-			Key: {
-				id: id
-			},
+		let result = await docClient.send(new ScanCommand({
 			TableName: process.env.LEO_CRON,
 			FilterExpression: "lambdaName = :value",
 			ExpressionAttributeValues: {
 				":value": lambdaName
 			}
-		}, (err, data) => {
-			if (err) reject(err);
-			else resolve(data.Items[0]);
-		}))
+		}));
+		if (!result.Items || !result.Items.length) {
+			throw new Error(`No bot found with lambdaName: ${lambdaName}`);
+		}
+		entry = result.Items[0];
 		id = entry.id;
 	}
 	if (!lambdaName) {
 		// Lookup lambda name
-		entry = await new Promise((resolve, reject) => docClient.get({
+		let result = await docClient.send(new GetCommand({
 			Key: {
 				id: id
 			},
 			TableName: process.env.LEO_CRON
-		}, (err, data) => {
-			if (err) reject(err);
-			else resolve(data.Item);
 		}));
+		if (!result.Item) {
+			throw new Error(`No bot found with id: ${id}`);
+		}
+		entry = result.Item;
 		lambdaName = entry.lambdaName;
 	}
 

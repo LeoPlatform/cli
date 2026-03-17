@@ -20,9 +20,12 @@ let https = require("https");
 let zlib = require("zlib");
 let fs = require("fs");
 let path = require("path");
-let aws = require("aws-sdk");
+const { LambdaClient, GetFunctionCommand } = require("@aws-sdk/client-lambda");
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, ScanCommand, GetCommand } = require("@aws-sdk/lib-dynamodb");
+const { NodeHttpHandler } = require("@smithy/node-http-handler");
 
-handler();
+handler().catch(err => { console.error(err); process.exit(1); });
 async function handler() {
 	let event = await buildEvent();
 	process.env.AWS_LAMBDA_FUNCTION_NAME = process.env.AWS_LAMBDA_FUNCTION_NAME || event.__cron.name;
@@ -30,17 +33,15 @@ async function handler() {
 	let tmpDir = process.env.DIR || "/tmp";
 
 
-	let lambda = new aws.Lambda({
+	let lambda = new LambdaClient({
 		region: process.env.AWS_REGION
 	});
 
-	lambda.getFunction({
-		FunctionName: FunctionName
-	}, (err, functionData) => {
-		if (err) {
-			console.log(`Cannot fund function: ${FunctionName}`, err);
-			process.exit();
-		}
+	try {
+		let functionData = await lambda.send(new GetFunctionCommand({
+			FunctionName: FunctionName
+		}));
+
 		if (process.env.TIMEOUT || process.env.AWS_LAMBDA_FUNCTION_TIMEOUT) {
 			functionData.Configuration.Timeout = parseInt(process.env.AWS_LAMBDA_FUNCTION_TIMEOUT || process.env.TIMEOUT);
 		} else {
@@ -62,7 +63,7 @@ async function handler() {
 		}, (err, data) => {
 			if (err) {
 				console.log(err);
-				return callback(err);
+				process.exit(1);
 			}
 			let context = createContext(data.Configuration || {});
 			let handler = data.module[data.handler || "handler"];
@@ -70,6 +71,7 @@ async function handler() {
 			// Assume the lambda's role
 			let role = functionData.Configuration.Role;
 			console.error("new role", role);
+			// Role assumption commented out in original — preserved as-is
 			// aws.config.credentials = new aws.TemporaryCredentials({
 			// 	RoleArn: role
 			// });
@@ -86,8 +88,12 @@ async function handler() {
 			});
 			// });
 		});
-	});
-	let importModule = function(url, data, callback) {
+	} catch (err) {
+		console.log(`Cannot find function: ${FunctionName}`, err);
+		process.exit(1);
+	}
+
+	function importModule(url, data, callback) {
 		data = Object.assign({
 			main: "index.js",
 			index: "handler"
@@ -131,17 +137,17 @@ async function buildEvent() {
 		return event;
 	}
 
-	var docClient = new aws.DynamoDB.DocumentClient({
+	let ddbClient = new DynamoDBClient({
 		region: process.env.AWS_REGION,
-		maxRetries: 2,
-		convertEmptyValues: true,
-		httpOptions: {
-			connectTimeout: 2000,
-			timeout: 5000,
-			agent: new https.Agent({
-				ciphers: 'ALL',
-			})
-		}
+		maxAttempts: 2,
+		requestHandler: new NodeHttpHandler({
+			httpsAgent: new https.Agent({ ciphers: 'ALL' }),
+			connectionTimeout: 2000,
+			requestTimeout: 5000
+		})
+	});
+	var docClient = DynamoDBDocumentClient.from(ddbClient, {
+		marshallOptions: { convertEmptyValues: true }
 	});
 
 	let id = process.env.BOT;
@@ -149,32 +155,31 @@ async function buildEvent() {
 	let entry;
 	if (!id) {
 		// Scan table for lambda name;
-		entry = await new Promise((resolve, reject) => docClient.scan({
-			Key: {
-				id: id
-			},
+		let result = await docClient.send(new ScanCommand({
 			TableName: process.env.LEO_CRON,
 			FilterExpression: "lambdaName = :value",
 			ExpressionAttributeValues: {
 				":value": lambdaName
 			}
-		}, (err, data) => {
-			if (err) reject(err);
-			else resolve(data.Items[0]);
-		}))
+		}));
+		if (!result.Items || !result.Items.length) {
+			throw new Error(`No bot found with lambdaName: ${lambdaName}`);
+		}
+		entry = result.Items[0];
 		id = entry.id;
 	}
 	if (!lambdaName) {
 		// Lookup lambda name
-		entry = await new Promise((resolve, reject) => docClient.get({
+		let result = await docClient.send(new GetCommand({
 			Key: {
 				id: id
 			},
 			TableName: process.env.LEO_CRON
-		}, (err, data) => {
-			if (err) reject(err);
-			else resolve(data.Item);
 		}));
+		if (!result.Item) {
+			throw new Error(`No bot found with id: ${id}`);
+		}
+		entry = result.Item;
 		lambdaName = entry.lambdaName;
 	}
 	let overrides = {};

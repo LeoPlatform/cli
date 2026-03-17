@@ -9,6 +9,9 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"aws-sdk": "^2.276.1"
+		"@aws-sdk/client-dynamodb": "^3.1010.0",
+		"@aws-sdk/client-lambda": "^3.1010.0",
+		"@aws-sdk/lib-dynamodb": "^3.1010.0",
+		"@smithy/node-http-handler": "^4.5.0"
 	}
 }
