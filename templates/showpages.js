@@ -60,7 +60,7 @@ function getPage(page) {
 }
 
 
-exports.handler = function(event, context, callback) {
+exports.handler = async function(event) {
 	var page = event.resource;
 	variables['leo.basehref'] = variables.basehref = ("/" + event.requestContext.path.split('/')[1].replace(/\/$/, '') + "/").replace(/\/+/g, "/");
 
@@ -81,29 +81,29 @@ exports.handler = function(event, context, callback) {
 					Logins: login.get(event)
 				})
 			}
-			callback(null, {
+			return {
 				statusCode: 200,
 				headers: {
 					'Content-Type': 'text/html'
 				},
 				body: getPage(page).replace(/"__delayed_logins__"/, logins)
-			});
+			};
 		} catch (err) {
-			callback(null, {
+			return {
 				statusCode: 500,
 				headers: {
 					'Content-Type': 'text/html'
 				},
 				body: err.toString()
-			});
+			};
 		}
 	} else {
-		callback(null, {
+		return {
 			statusCode: 404,
 			headers: {
 				'Content-Type': 'text/html'
 			},
 			body: "File not found"
-		});
+		};
 	}
 };
